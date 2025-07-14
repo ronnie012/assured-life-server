@@ -1,0 +1,8 @@
+
+> assured-life-server@1.0.0 start
+> node index.js start index.js[dotenv@17.0.1] injecting env (6) from .env – [tip] encrypt with dotenvx: https://dotenvx.com[dotenv@17.0.1] injecting env (0) from .env – [tip] encrypt with dotenvx: https://dotenvx.comLife Insurance server is running on port: 5000 Pinged your deployment. You successfully connected to MongoDB
+
+[dotenv@17.0.1] injecting env (0) from .env – [tip] encrypt with dotenvx: https://dotenvx.com
+[dotenv@17.0.1] injecting env (0) from .env – [tip] encrypt with dotenvx: https://dotenvx.com
+Life Insurance server is running on port: 5000
+Pinged your deployment. You successfully connected to MongoDB!
