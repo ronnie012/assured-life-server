@@ -2,7 +2,7 @@ const Agent = require('../../../models/Agent');
 const { ObjectId } = require('mongodb');
 const client = require('../../../config/db');
 
-const agentsCollection = client.db('life-insurance').collection('agents');
+const agentsCollection = client.db('assuredLife').collection('agents');
 const usersCollection = client.db('assuredLife').collection('users');
 
 const getAllAgents = async (req, res) => {
@@ -27,15 +27,21 @@ const getFeaturedAgents = async (req, res) => {
 };
 
 const getAgentApplications = async (req, res) => {
+  console.log('Server: Attempting to fetch pending agent applications.');
   try {
     const pendingAgents = await agentsCollection.aggregate([
       {
         $match: { status: 'pending' }
       },
       {
+        $addFields: {
+          userIdObjectId: { $toObjectId: "$userId" }
+        }
+      },
+      {
         $lookup: {
           from: 'users',
-          localField: 'userId',
+          localField: 'userIdObjectId',
           foreignField: '_id',
           as: 'userInfo'
         }
@@ -46,7 +52,7 @@ const getAgentApplications = async (req, res) => {
       {
         $project: {
           _id: 1,
-          name: 1,
+          name: '$userName',
           photo: 1,
           experience: 1,
           specialties: 1,
@@ -56,9 +62,11 @@ const getAgentApplications = async (req, res) => {
         }
       }
     ]).toArray();
+    console.log('Server: Fetched pending agent applications. Count:', pendingAgents.length);
+    console.log('Server: Pending agent applications data:', pendingAgents); // Log the fetched data
     res.status(200).json(pendingAgents);
   } catch (error) {
-    console.error('Error fetching agent applications:', error);
+    console.error('Server Error: Error fetching agent applications:', error);
     res.status(500).json({ message: 'Server error fetching agent applications.' });
   }
 };
@@ -116,15 +124,21 @@ const rejectAgentApplication = async (req, res) => {
 };
 
 const getAllApprovedAgents = async (req, res) => {
+  console.log('Server: Attempting to fetch all approved agents.');
   try {
     const approvedAgents = await agentsCollection.aggregate([
       {
         $match: { status: 'approved' }
       },
       {
+        $addFields: {
+          userIdObjectId: { $toObjectId: "$userId" }
+        }
+      },
+      {
         $lookup: {
           from: 'users',
-          localField: 'userId',
+          localField: 'userIdObjectId',
           foreignField: '_id',
           as: 'userInfo'
         }
@@ -135,7 +149,7 @@ const getAllApprovedAgents = async (req, res) => {
       {
         $project: {
           _id: 1,
-          name: 1,
+          'name': '$userName',
           photo: 1,
           experience: 1,
           specialties: 1,
@@ -145,11 +159,42 @@ const getAllApprovedAgents = async (req, res) => {
         }
       }
     ]).toArray();
+    console.log('Server: Fetched approved agents. Count:', approvedAgents.length);
+    console.log('Server: Approved agents data:', approvedAgents);
     res.status(200).json(approvedAgents);
   } catch (error) {
-    console.error('Error fetching approved agents:', error);
+    console.error('Server Error: Error fetching approved agents:', error);
     res.status(500).json({ message: 'Server error fetching approved agents.' });
   }
 };
 
-module.exports = { getFeaturedAgents, getAgentApplications, approveAgentApplication, rejectAgentApplication, getAllApprovedAgents, getAllAgents };
+const submitAgentApplication = async (req, res) => {
+  try {
+    const { userId, userName, userEmail, experience, specialties, motivation } = req.body;
+
+    // Ensure specialties is an array, convert if it's a comma-separated string
+    const parsedSpecialties = Array.isArray(specialties) 
+      ? specialties 
+      : specialties.split(',').map(s => s.trim());
+
+    const newApplication = {
+      userId: new ObjectId(userId), // Convert userId to ObjectId
+      userName,
+      userEmail,
+      experience: parseInt(experience), // Ensure experience is a number
+      specialties: parsedSpecialties,
+      motivation,
+      status: 'pending',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    const result = await agentsCollection.insertOne(newApplication);
+    res.status(201).json({ message: 'Agent application submitted successfully!', insertedId: result.insertedId });
+  } catch (error) {
+    console.error('Error submitting agent application:', error);
+    res.status(500).json({ message: 'Server error submitting agent application.' });
+  }
+};
+
+module.exports = { getFeaturedAgents, getAgentApplications, approveAgentApplication, rejectAgentApplication, getAllApprovedAgents, getAllAgents, submitAgentApplication };

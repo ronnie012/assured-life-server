@@ -2,14 +2,19 @@ const { ObjectId } = require('mongodb');
 const client = require('../../../config/db');
 
 const usersCollection = client.db('assuredLife').collection('users');
+const agentsCollection = client.db('assuredLife').collection('agents');
 
 const getAllUsers = async (req, res) => {
+  console.log('Server: Attempting to fetch all users.');
+  console.log('Server: req.user in getAllUsers:', req.user); // Added logging for req.user
   try {
-    const users = await usersCollection.find({}).project({ password: 0 }).toArray(); // Exclude password
+    const users = await usersCollection.find({}).project({ _id: 1, name: 1, email: 1, role: 1, lastLogin: 1, createdAt: 1 }).toArray(); // Explicitly include necessary fields
+    console.log('Server: Successfully fetched all users. Count:', users.length);
+    console.log('Server: Users data:', users); // Log full users array for inspection
     res.status(200).json(users);
   } catch (error) {
-    console.error('Error fetching all users:', error);
-    res.status(500).json({ message: 'Server error fetching users.' });
+    console.error('Server Error: Error fetching all users:', error); // Log the full error object
+    res.status(500).json({ message: 'Server error fetching users.', error: error.message });
   }
 };
 
@@ -30,6 +35,34 @@ const updateUserRole = async (req, res) => {
     if (result.matchedCount === 0) {
       return res.status(404).json({ message: 'User not found.' });
     }
+
+    // If role is updated to 'agent', ensure an entry exists in the agents collection
+    if (role === 'agent') {
+      const user = await usersCollection.findOne({ _id: new ObjectId(id) });
+      if (user) {
+        await agentsCollection.updateOne(
+          { userId: new ObjectId(id) },
+          {
+            $set: {
+              status: 'approved',
+              name: user.name || user.email, // Use user's name or email
+              email: user.email,
+              experience: 'N/A', // Default value
+              specialties: [], // Default value
+              updatedAt: new Date(),
+            },
+            $setOnInsert: {
+              createdAt: new Date(),
+            },
+          },
+          { upsert: true }
+        );
+      }
+    } else {
+      // If role is changed from 'agent' to something else, remove or mark agent entry
+      await agentsCollection.deleteOne({ userId: new ObjectId(id) });
+    }
+
     res.status(200).json({ message: 'User role updated successfully.' });
   } catch (error) {
     console.error('Error updating user role:', error);
