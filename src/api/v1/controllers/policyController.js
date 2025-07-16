@@ -6,16 +6,19 @@ const applicationsCollection = client.db('assuredLife').collection('applications
 const usersCollection = client.db('assuredLife').collection('users');
 
 const getPopularPolicies = async (req, res) => {
+  console.log('Server: Attempting to fetch popular policies.');
   try {
     const popularPolicies = await policiesCollection.find({}).sort({ purchaseCount: -1 }).limit(6).toArray();
+    console.log('Server: Fetched popular policies data (count: '+ popularPolicies.length + '):', popularPolicies);
     res.status(200).json(popularPolicies);
   } catch (error) {
-    console.error('Error fetching popular policies:', error);
+    console.error('Server Error: Error fetching popular policies:', error);
     res.status(500).json({ message: 'Server error fetching popular policies.' });
   }
 };
 
 const getAllPolicies = async (req, res) => {
+  console.log('Server: Attempting to fetch all policies.');
   try {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 6; // 6 policies per page as per requirement
@@ -34,6 +37,10 @@ const getAllPolicies = async (req, res) => {
     const policies = await policiesCollection.find(query).skip(skip).limit(limit).toArray();
     const totalPolicies = await policiesCollection.countDocuments(query);
 
+    console.log('Server: Fetched policies. Count:', policies.length);
+    console.log('Server: Total policies:', totalPolicies);
+    console.log('Server: Policies data:', policies);
+
     res.status(200).json({
       policies,
       totalPolicies,
@@ -41,7 +48,7 @@ const getAllPolicies = async (req, res) => {
       totalPages: Math.ceil(totalPolicies / limit),
     });
   } catch (error) {
-    console.error('Error fetching all policies:', error);
+    console.error('Server Error: Error fetching all policies:', error);
     res.status(500).json({ message: 'Server error fetching all policies.' });
   }
 };

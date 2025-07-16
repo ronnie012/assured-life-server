@@ -185,7 +185,7 @@ const getUserApplications = async (req, res) => {
   try {
     const applications = await applicationsCollection.aggregate([
       {
-        $match: { userId: new ObjectId(userId) }
+        $match: { userId: userId }
       },
       {
         $lookup: {
