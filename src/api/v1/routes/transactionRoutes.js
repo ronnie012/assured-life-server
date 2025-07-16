@@ -1,11 +1,13 @@
 const express = require('express');
-const { getAllTransactions, getUserTransactions } = require('../controllers/transactionController');
+const { getAllTransactions, createTransaction, updateTransaction, deleteTransaction } = require('../controllers/transactionController');
 const firebaseAuthMiddleware = require('../../../middlewares/firebaseAuthMiddleware');
 const checkRole = require('../../../middlewares/roleCheckMiddleware');
 
 const router = express.Router();
 
 router.get('/', firebaseAuthMiddleware, checkRole(['admin']), getAllTransactions);
-router.get('/my-transactions', firebaseAuthMiddleware, checkRole(['customer']), getUserTransactions);
+router.post('/', firebaseAuthMiddleware, checkRole(['admin']), createTransaction);
+router.put('/:id', firebaseAuthMiddleware, checkRole(['admin']), updateTransaction);
+router.delete('/:id', firebaseAuthMiddleware, checkRole(['admin']), deleteTransaction);
 
 module.exports = router;

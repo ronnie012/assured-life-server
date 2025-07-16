@@ -4,11 +4,13 @@ const client = require('../../../config/db');
 const reviewsCollection = client.db('assuredLife').collection('reviews');
 
 const getCustomerReviews = async (req, res) => {
+  console.log('Server: Attempting to fetch customer reviews.');
   try {
     const reviews = await reviewsCollection.find({}).sort({ createdAt: -1 }).limit(5).toArray();
+    console.log('Server: Successfully fetched customer reviews (count: '+ reviews.length + '):', reviews);
     res.status(200).json(reviews);
   } catch (error) {
-    console.error('Error fetching customer reviews:', error);
+    console.error('Server Error: Error fetching customer reviews:', error);
     res.status(500).json({ message: 'Server error fetching customer reviews.' });
   }
 };
@@ -21,7 +23,7 @@ const createReview = async (req, res) => {
 
   try {
     const newReview = {
-      userId: new ObjectId(userId),
+      firebaseUid: userId,
       userName,
       userImage,
       rating: parseInt(rating),

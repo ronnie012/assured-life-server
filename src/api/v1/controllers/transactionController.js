@@ -7,9 +7,15 @@ const getAllTransactions = async (req, res) => {
   try {
     const transactions = await transactionsCollection.aggregate([
       {
+        $addFields: {
+          userIdObjectId: { $toObjectId: "$userId" },
+          policyIdObjectId: { $toObjectId: "$policyId" }
+        }
+      },
+      {
         $lookup: {
           from: 'users',
-          localField: 'userId',
+          localField: 'userIdObjectId',
           foreignField: '_id',
           as: 'userInfo'
         }
@@ -20,7 +26,7 @@ const getAllTransactions = async (req, res) => {
       {
         $lookup: {
           from: 'policies',
-          localField: 'policyId',
+          localField: 'policyIdObjectId',
           foreignField: '_id',
           as: 'policyInfo'
         }
@@ -96,4 +102,19 @@ const getUserTransactions = async (req, res) => {
   }
 };
 
-module.exports = { getAllTransactions, getUserTransactions };
+const createTransaction = async (req, res) => {
+  // Placeholder for creating a transaction
+  res.status(201).json({ message: 'Transaction creation not yet implemented.' });
+};
+
+const updateTransaction = async (req, res) => {
+  // Placeholder for updating a transaction
+  res.status(200).json({ message: 'Transaction update not yet implemented.' });
+};
+
+const deleteTransaction = async (req, res) => {
+  // Placeholder for deleting a transaction
+  res.status(200).json({ message: 'Transaction deletion not yet implemented.' });
+};
+
+module.exports = { getAllTransactions, getUserTransactions, createTransaction, updateTransaction, deleteTransaction };

@@ -22,7 +22,7 @@ const createBlog = async (req, res) => {
     const newBlog = {
       title,
       content,
-      authorId: new ObjectId(authorId),
+      authorId: authorId,
       author: authorName,
       publishDate: new Date(),
     };
@@ -39,7 +39,7 @@ const getAgentBlogs = async (req, res) => {
   const agentId = req.user.uid; // Get agent ID from authenticated user (Firebase UID)
 
   try {
-    const blogs = await blogsCollection.find({ authorId: new ObjectId(agentId) }).sort({ publishDate: -1 }).toArray();
+    const blogs = await blogsCollection.find({ authorId: agentId }).sort({ publishDate: -1 }).toArray();
     res.status(200).json(blogs);
   } catch (error) {
     console.error('Error fetching agent blogs:', error);
@@ -50,11 +50,11 @@ const getAgentBlogs = async (req, res) => {
 const updateBlog = async (req, res) => {
   const { id } = req.params;
   const { title, content } = req.body;
-  const authorId = req.user.userId;
+  const authorId = req.user.uid;
 
   try {
     const result = await blogsCollection.updateOne(
-      { _id: new ObjectId(id), authorId: new ObjectId(authorId) }, // Ensure only author can update
+      { _id: new ObjectId(id), authorId: authorId }, // Ensure only author can update
       { $set: { title, content, updatedAt: new Date() } }
     );
 
@@ -74,7 +74,7 @@ const deleteBlog = async (req, res) => {
 
   try {
     const result = await blogsCollection.deleteOne(
-      { _id: new ObjectId(id), authorId: new ObjectId(authorId) } // Ensure only author can delete
+      { _id: new ObjectId(id), authorId: authorId } // Ensure only author can delete
     );
 
     if (result.deletedCount === 0) {
