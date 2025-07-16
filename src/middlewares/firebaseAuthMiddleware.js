@@ -17,20 +17,21 @@ const firebaseAuthMiddleware = async (req, res, next) => {
     
     // Fetch user role from MongoDB
     const user = await usersCollection.findOne({ firebaseUid: decodedToken.uid });
+    console.log('Middleware: User fetched from DB:', user); // Added logging for user object
 
     if (!user) {
       return res.status(404).send('User not found in database.');
     }
 
     req.user = { ...decodedToken, role: user.role }; // Attach decoded token and role
-    console.log('Middleware: req.user.uid after assignment:', req.user.uid);
+    console.log('Middleware: req.user after assignment:', req.user); // Added logging for req.user object
     next();
   } catch (error) {
     console.error('Error verifying Firebase ID token or fetching user role:', error);
     if (error.code === 'auth/id-token-expired') {
       return res.status(401).send('Unauthorized: Token expired.');
     } else if (error.code === 'auth/argument-error') {
-      return res.status(401).send('Unauthorized: Invalid token.');
+      return res.status(401).send('Unauthorized: Invalid token.' );
     } else {
       return res.status(401).send('Unauthorized: Invalid token.');
     }

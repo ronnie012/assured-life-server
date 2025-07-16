@@ -23,6 +23,9 @@ const paymentRoutes = require('./src/api/v1/routes/paymentRoutes');
 const claimRoutes = require('./src/api/v1/routes/claimRoutes');
 const profileRoutes = require('./src/api/v1/routes/profileRoutes');
 const faqRoutes = require('./src/api/v1/routes/faqRoutes');
+const firebaseAuthMiddleware = require('./src/middlewares/firebaseAuthMiddleware');
+const Policy = require('./src/models/Policy');
+const Review = require('./src/models/Review');
 
 app.get('/', (req, res) => {
   res.send('Life Insurance server is running...');
@@ -41,12 +44,34 @@ app.use('/api/v1/transactions', transactionRoutes);
 app.use('/api/v1/payments', paymentRoutes);
 app.use('/api/v1/claims', claimRoutes);
 
-// Temporary middleware for debugging profile data sync
-app.use('/api/v1/profile', (req, res, next) => {
-  console.log('Temporary Profile Middleware: req.user.uid =', req.user ? req.user.uid : 'undefined');
-  next();
-}, profileRoutes);
+app.use('/api/v1/profile', firebaseAuthMiddleware, profileRoutes);
 app.use('/api/v1/faqs', faqRoutes);
+
+// popular-policies route
+app.get('/api/v1/popular-policies', async (req, res) => {
+  try {
+    const popularPolicies = await Policy.find().sort({ purchaseCount: -1 }).limit(6);
+    res.status(200).json(popularPolicies);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching popular policies', error });
+  }
+});
+
+// reviews route
+app.get('/api/v1/reviews', async (req, res) => {
+  try {
+    const reviews = await Review.find().sort({ createdAt: -1 }).limit(5);
+    res.status(200).json(reviews);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching reviews', error });
+  }
+});
+
+// Global error handler
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).send('Something broke!');
+});
 
 app.listen(port, () => {
   console.log(`Life Insurance server is running on port: ${port}`);
