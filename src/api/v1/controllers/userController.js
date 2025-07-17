@@ -40,17 +40,33 @@ const updateUserRole = async (req, res) => {
     if (role === 'agent') {
       const user = await usersCollection.findOne({ _id: new ObjectId(id) });
       if (user) {
+        // Try to find an existing agent entry for this user
+        const existingAgent = await agentsCollection.findOne({ userId: new ObjectId(id) });
+
+        const updateFields = {
+          status: 'approved',
+          name: user.name || user.email, // Use user's name or email
+          email: user.email,
+          updatedAt: new Date(),
+        };
+
+        // Only set experience and specialties if they exist in existingAgent
+        if (existingAgent && existingAgent.experience !== undefined) {
+          updateFields.experience = existingAgent.experience;
+        } else {
+          updateFields.experience = 'N/A'; // Default if no existing or undefined
+        }
+
+        if (existingAgent && existingAgent.specialties !== undefined) {
+          updateFields.specialties = existingAgent.specialties;
+        } else {
+          updateFields.specialties = []; // Default if no existing or undefined
+        }
+
         await agentsCollection.updateOne(
           { userId: new ObjectId(id) },
           {
-            $set: {
-              status: 'approved',
-              name: user.name || user.email, // Use user's name or email
-              email: user.email,
-              experience: 'N/A', // Default value
-              specialties: [], // Default value
-              updatedAt: new Date(),
-            },
+            $set: updateFields,
             $setOnInsert: {
               createdAt: new Date(),
             },
@@ -58,8 +74,25 @@ const updateUserRole = async (req, res) => {
           { upsert: true }
         );
       }
+    } else if (role === 'customer') {
+      // If role is changed to 'customer', update agent entry status to 'demoted'
+      const existingAgent = await agentsCollection.findOne({ userId: new ObjectId(id) });
+      console.log('Demoting agent: existingAgent found:', existingAgent);
+      if (existingAgent) { // Ensure existingAgent is found before trying to use its properties
+        await agentsCollection.updateOne(
+          { userId: new ObjectId(id) },
+          { $set: {
+              status: 'demoted',
+              experience: existingAgent.experience, // Directly use existing value
+              specialties: existingAgent.specialties, // Directly use existing value
+              updatedAt: new Date()
+            }
+          }
+        );
+        console.log('Demoting agent: Updated agent with experience:', existingAgent.experience, 'and specialties:', existingAgent.specialties);
+      }
     } else {
-      // If role is changed from 'agent' to something else, remove or mark agent entry
+      // For other roles (e.g., admin), ensure agent entry is removed if it exists
       await agentsCollection.deleteOne({ userId: new ObjectId(id) });
     }
 

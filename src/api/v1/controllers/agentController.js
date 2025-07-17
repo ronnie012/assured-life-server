@@ -7,7 +7,36 @@ const usersCollection = client.db('assuredLife').collection('users');
 
 const getAllAgents = async (req, res) => {
   try {
-    const agents = await agentsCollection.find({ status: 'approved' }).toArray();
+    const agents = await agentsCollection.aggregate([
+      {
+        $match: { status: 'approved' }
+      },
+      {
+        $addFields: {
+          userIdObjectId: { $toObjectId: "$userId" }
+        }
+      },
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'userIdObjectId',
+          foreignField: '_id',
+          as: 'userInfo'
+        }
+      },
+      {
+        $unwind: '$userInfo'
+      },
+      {
+        $project: {
+          _id: 1,
+          name: '$userInfo.name',
+          photo: '$userInfo.photoURL',
+          experience: 1,
+          specialties: 1,
+        }
+      }
+    ]).toArray();
     res.status(200).json(agents);
   } catch (error) {
     console.error('Error fetching all agents:', error);
@@ -72,21 +101,18 @@ const getAgentApplications = async (req, res) => {
 };
 
 const approveAgentApplication = async (req, res) => {
-  const { id } = req.params; // Agent application ID
-  const { userId } = req.body; // User ID associated with the agent application
+  const { id } = req.params; // This is the _id of the agent application document
+  const { userId } = req.body; // This is the userId associated with the application
 
   try {
-    // Update agent application status
-    const agentUpdateResult = await agentsCollection.updateOne(
-      { _id: new ObjectId(id) },
-      { $set: { status: 'approved', updatedAt: new Date() } }
-    );
+    // Find the agent application to get experience and specialties
+    const agentApplication = await agentsCollection.findOne({ _id: new ObjectId(id) });
 
-    if (agentUpdateResult.matchedCount === 0) {
+    if (!agentApplication) {
       return res.status(404).json({ message: 'Agent application not found.' });
     }
 
-    // Update user role to 'agent'
+    // Update the user's role in the usersCollection
     const userUpdateResult = await usersCollection.updateOne(
       { _id: new ObjectId(userId) },
       { $set: { role: 'agent', updatedAt: new Date() } }
@@ -95,6 +121,29 @@ const approveAgentApplication = async (req, res) => {
     if (userUpdateResult.matchedCount === 0) {
       return res.status(404).json({ message: 'User not found for this agent application.' });
     }
+
+    // Now, update or create the main agent entry in agentsCollection using userId
+    await agentsCollection.updateOne(
+      { userId: new ObjectId(userId) }, // Use userId to identify the agent profile
+      {
+        $set: {
+          status: 'approved',
+          userName: agentApplication.userName, // Use userName from application
+          userEmail: agentApplication.userEmail, // Use userEmail from application
+          experience: agentApplication.experience,
+          specialties: agentApplication.specialties,
+          updatedAt: new Date(),
+        },
+        $setOnInsert: {
+          createdAt: new Date(),
+          userId: new ObjectId(userId), // Ensure userId is set on insert
+        },
+      },
+      { upsert: true } // Create if not exists
+    );
+
+    // Optionally, delete the original pending application document if it's no longer needed
+        await agentsCollection.deleteOne({ _id: new ObjectId(id) });
 
     res.status(200).json({ message: 'Agent application approved and user role updated.' });
   } catch (error) {
@@ -149,10 +198,10 @@ const getAllApprovedAgents = async (req, res) => {
       {
         $project: {
           _id: 1,
-          'name': '$userName',
-          photo: 1,
-          experience: 1,
-          specialties: 1,
+          'name': '$userInfo.name',
+          photo: '$userInfo.photoURL',
+          experience: '$experience',
+          specialties: '$specialties',
           status: 1,
           'userEmail': '$userInfo.email',
           'userId': '$userInfo._id',
@@ -160,7 +209,7 @@ const getAllApprovedAgents = async (req, res) => {
       }
     ]).toArray();
     console.log('Server: Fetched approved agents. Count:', approvedAgents.length);
-    console.log('Server: Approved agents data:', approvedAgents);
+    console.log('Server: Approved agents data (full):', JSON.stringify(approvedAgents, null, 2));
     res.status(200).json(approvedAgents);
   } catch (error) {
     console.error('Server Error: Error fetching approved agents:', error);
@@ -181,7 +230,7 @@ const submitAgentApplication = async (req, res) => {
       userId: new ObjectId(userId), // Convert userId to ObjectId
       userName,
       userEmail,
-      experience: parseInt(experience), // Ensure experience is a number
+      experience,
       specialties: parsedSpecialties,
       motivation,
       status: 'pending',
