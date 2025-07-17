@@ -46,8 +46,39 @@ const getAllAgents = async (req, res) => {
 
 const getFeaturedAgents = async (req, res) => {
   try {
-    // Fetch 3 agents with status 'approved'
-    const featuredAgents = await agentsCollection.find({ status: 'approved' }).limit(3).toArray();
+    const featuredAgents = await agentsCollection.aggregate([
+      {
+        $match: { status: 'approved' }
+      },
+      {
+        $addFields: {
+          userIdObjectId: { $toObjectId: "$userId" }
+        }
+      },
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'userIdObjectId',
+          foreignField: '_id',
+          as: 'userInfo'
+        }
+      },
+      {
+        $unwind: '$userInfo'
+      },
+      {
+        $project: {
+          _id: 1,
+          name: '$userInfo.name',
+          photo: '$userInfo.photoURL',
+          experience: 1,
+          specialties: 1,
+        }
+      },
+      {
+        $limit: 3
+      }
+    ]).toArray();
     res.status(200).json(featuredAgents);
   } catch (error) {
     console.error('Error fetching featured agents:', error);
