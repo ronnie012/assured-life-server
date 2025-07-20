@@ -1,4 +1,3 @@
-
 const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
@@ -7,7 +6,10 @@ const app = express();
 const port = process.env.PORT || 5000;
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: ['http://localhost:5173', 'http://127.0.0.1:5173', 'http://localhost:5174', 'http://127.0.0.1:5174'],
+  credentials: true
+}));
 app.use(express.json());
 
 const authRoutes = require('./src/api/v1/routes/authRoutes');
@@ -23,6 +25,7 @@ const paymentRoutes = require('./src/api/v1/routes/paymentRoutes');
 const claimRoutes = require('./src/api/v1/routes/claimRoutes');
 const profileRoutes = require('./src/api/v1/routes/profileRoutes');
 const faqRoutes = require('./src/api/v1/routes/faqRoutes');
+const customerRoutes = require('./src/api/v1/routes/customerRoutes');
 const firebaseAuthMiddleware = require('./src/middlewares/firebaseAuthMiddleware');
 const Policy = require('./src/models/Policy');
 const Review = require('./src/models/Review');
@@ -46,15 +49,12 @@ app.use('/api/v1/claims', claimRoutes);
 
 app.use('/api/v1/profile', firebaseAuthMiddleware, profileRoutes);
 app.use('/api/v1/faqs', faqRoutes);
+app.use('/api/v1/customer', customerRoutes);
 
-// popular-policies route
-app.get('/api/v1/popular-policies', async (req, res) => {
-  try {
-    const popularPolicies = await Policy.find().sort({ purchaseCount: -1 }).limit(6);
-    res.status(200).json(popularPolicies);
-  } catch (error) {
-    res.status(500).json({ message: 'Error fetching popular policies', error });
-  }
+// NEW TEST ROUTE
+app.get('/api/v1/test/:id', (req, res) => {
+  console.log('TEST ROUTE HIT! ID:', req.params.id);
+  res.status(200).json({ message: `Test route hit with ID: ${req.params.id}` });
 });
 
 // reviews route
@@ -73,6 +73,6 @@ app.use((err, req, res, next) => {
   res.status(500).send('Something broke!');
 });
 
-app.listen(port, () => {
-  console.log(`Life Insurance server is running on port: ${port}`);
+app.listen(port, '0.0.0.0', () => {
+  console.log(`Life Insurance server is running on port: ${port} and listening on all network interfaces.`);
 });
