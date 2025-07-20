@@ -4,11 +4,14 @@ const firebaseAuthMiddleware = require('../../../middlewares/firebaseAuthMiddlew
 const checkRole = require('../../../middlewares/roleCheckMiddleware');
 
 const router = express.Router();
+console.log('policyRoutes: Router initialized.');
 
 router.get('/popular', getPopularPolicies);
 router.get('/', getAllPolicies);
-router.get('/my-policies', firebaseAuthMiddleware, checkRole(['customer']), getAppliedPoliciesForUser);
-router.get('/:id', getPolicyById);
+router.get('/:id', (req, res, next) => {
+  console.log('policyRoutes: Hit /:id route with ID:', req.params.id);
+  getPolicyById(req, res, next);
+});
 router.post('/', firebaseAuthMiddleware, checkRole(['admin']), createPolicy);
 router.put('/:id', firebaseAuthMiddleware, checkRole(['admin']), updatePolicy);
 router.delete('/:id', firebaseAuthMiddleware, checkRole(['admin']), deletePolicy);

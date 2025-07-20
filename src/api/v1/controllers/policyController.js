@@ -8,7 +8,7 @@ const usersCollection = client.db('assuredLife').collection('users');
 const getPopularPolicies = async (req, res) => {
   console.log('Server: Attempting to fetch popular policies.');
   try {
-    const popularPolicies = await policiesCollection.find({}).sort({ purchaseCount: -1 }).limit(6).toArray();
+    const popularPolicies = await policiesCollection.find({}).limit(6).toArray();
     console.log('Server: Fetched popular policies data (count: '+ popularPolicies.length + '):', popularPolicies);
     res.status(200).json(popularPolicies);
   } catch (error) {
@@ -54,6 +54,7 @@ const getAllPolicies = async (req, res) => {
 };
 
 const getPolicyById = async (req, res) => {
+  console.log('Server: getPolicyById function entered. ID:', req.params.id);
   try {
     const policy = await policiesCollection.findOne({ _id: new ObjectId(req.params.id) });
     if (!policy) {

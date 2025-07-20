@@ -185,7 +185,10 @@ const getUserApplications = async (req, res) => {
   try {
     const applications = await applicationsCollection.aggregate([
       {
-        $match: { userId: userId }
+        $match: { 
+          userId: userId,
+          status: 'Approved' 
+        }
       },
       {
         $lookup: {
@@ -199,6 +202,23 @@ const getUserApplications = async (req, res) => {
         $unwind: '$policyInfo'
       },
       {
+        $lookup: {
+          from: 'claims',
+          let: { policyId: '$policyId', userId: '$userId' },
+          pipeline: [
+            { $match: { $expr: { $and: [ { $eq: [ '$policyId', '$policyId' ] }, { $eq: [ '$userId', '$userId' ] } ] } } },
+            { $sort: { submittedAt: -1 } },
+            { $limit: 1 }
+          ],
+          as: 'claimInfo'
+        }
+      },
+      {
+        $addFields: {
+          claimStatus: { $ifNull: [ { $arrayElemAt: [ '$claimInfo.status', 0 ] }, 'No Claim' ] }
+        }
+      },
+      {
         $project: {
           _id: 1,
           'policyName': '$policyInfo.title',
@@ -207,6 +227,8 @@ const getUserApplications = async (req, res) => {
           personalData: 1,
           nomineeData: 1,
           healthDisclosure: 1,
+          feedback: 1, // Include feedback
+          claimStatus: 1,
         }
       },
       {
