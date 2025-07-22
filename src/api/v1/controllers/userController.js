@@ -1,10 +1,13 @@
 const { ObjectId } = require('mongodb');
 const client = require('../../../config/db');
 
+
+
 const usersCollection = client.db('assuredLife').collection('users');
 const agentsCollection = client.db('assuredLife').collection('agents');
 
 const getAllUsers = async (req, res) => {
+  const usersCollection = client.db('assuredLife').collection('users');
   console.log('Server: Attempting to fetch all users.');
   console.log('Server: req.user in getAllUsers:', req.user); // Added logging for req.user
   try {
@@ -19,6 +22,8 @@ const getAllUsers = async (req, res) => {
 };
 
 const updateUserRole = async (req, res) => {
+  const usersCollection = client.db('assuredLife').collection('users');
+  const agentsCollection = client.db('assuredLife').collection('agents');
   const { id } = req.params;
   const { role } = req.body;
 
@@ -124,13 +129,16 @@ const upsertFirebaseUser = async (req, res) => {
     if (displayName) {
       updateDoc.$set.name = displayName;
     } else {
-      updateDoc.$setOnInsert.name = email; // Set name on insert if not provided
+      updateDoc.$set.name = email.split('@')[0]; // Always set name to email's local part if displayName not provided
     }
 
-    if (photoURL) {
-      updateDoc.$set.photoURL = photoURL;
-    } else {
-      updateDoc.$setOnInsert.photoURL = DEFAULT_AVATAR_URL; // Set default photo on insert if not provided
+    // Handle photoURL
+    if (photoURL !== undefined) { // If photoURL is explicitly provided in the request body
+      updateDoc.$set.photoURL = photoURL; // Use it, even if it's an empty string (to clear it)
+    } else { // If photoURL is NOT provided in the request body
+      // This means we should not change the existing photoURL for existing users.
+      // For new users, we need to set a default.
+      updateDoc.$setOnInsert.photoURL = DEFAULT_AVATAR_URL;
     }
 
     const options = { upsert: true, returnDocument: 'after' }; // Create if not exists, return the updated/inserted document
@@ -152,6 +160,7 @@ const upsertFirebaseUser = async (req, res) => {
 };
 
 const deleteUser = async (req, res) => {
+  const usersCollection = client.db('assuredLife').collection('users');
   const { id } = req.params;
 
   try {

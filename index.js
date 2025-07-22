@@ -12,6 +12,9 @@ app.use(cors({
 }));
 app.use(express.json());
 
+// Handle preflight requests for all routes
+// app.options('*', cors());
+
 const authRoutes = require('./src/api/v1/routes/authRoutes');
 const policyRoutes = require('./src/api/v1/routes/policyRoutes');
 const reviewRoutes = require('./src/api/v1/routes/reviewRoutes');

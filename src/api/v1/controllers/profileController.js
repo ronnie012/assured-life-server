@@ -32,8 +32,8 @@ const updateProfile = async (req, res) => {
       updatedAt: new Date(),
     };
 
-    // Only update photoURL if it's provided and not an empty string
-    if (photoURL) {
+    // Update photoURL if it's provided (can be an empty string to clear it)
+    if (photoURL !== undefined) {
       updateFields.photoURL = photoURL;
     }
 
