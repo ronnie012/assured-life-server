@@ -1,18 +1,17 @@
 const { ObjectId } = require('mongodb');
 const client = require('../../../config/db');
 
-const blogsCollection = client.db('assuredLife').collection('blogs');
-
 const getAllBlogs = async (req, res) => {
+  const blogsCollection = client.db('assuredLife').collection('blogs');
   const page = parseInt(req.query.page) || 1;
-  const limit = parseInt(req.query.limit) || 9; // Default to 9 blogs per page
+  const limit = parseInt(req.query.limit) || 9;
   const skip = (page - 1) * limit;
   const searchTerm = req.query.search || '';
 
   try {
     const query = {};
     if (searchTerm) {
-      query.title = { $regex: searchTerm, $options: 'i' }; // Case-insensitive search by title
+      query.title = { $regex: searchTerm, $options: 'i' };
     }
 
     const blogs = await blogsCollection.find(query).sort({ publishDate: -1 }).skip(skip).limit(limit).toArray();
@@ -27,12 +26,13 @@ const getAllBlogs = async (req, res) => {
 };
 
 const getBlogById = async (req, res) => {
+  const blogsCollection = client.db('assuredLife').collection('blogs');
   const { id } = req.params;
   try {
     const blog = await blogsCollection.findOneAndUpdate(
       { _id: new ObjectId(id) },
-      { $inc: { totalVisit: 1 } }, // Increment totalVisit count
-      { returnDocument: 'after' } // Return the updated document
+      { $inc: { totalVisit: 1 } },
+      { returnDocument: 'after' }
     );
 
     if (!blog) {
@@ -46,6 +46,7 @@ const getBlogById = async (req, res) => {
 };
 
 const getLatestBlogs = async (req, res) => {
+  const blogsCollection = client.db('assuredLife').collection('blogs');
   try {
     const blogs = await blogsCollection.find({}).sort({ publishDate: -1 }).limit(4).toArray();
     res.status(200).json(blogs);
@@ -56,19 +57,29 @@ const getLatestBlogs = async (req, res) => {
 };
 
 const createBlog = async (req, res) => {
-  const { title, content, blogImage } = req.body; // Added blogImage
-  const authorId = req.user.uid; // Get author ID from authenticated user (Firebase UID)
-  const authorName = req.user.name || req.user.email; // Get author name from authenticated user
+  const blogsCollection = client.db('assuredLife').collection('blogs');
+  const { title, content, blogImage } = req.body;
+  const authorId = req.user.uid;
+  let authorName = req.user.displayName || req.user.name;
+  if (!authorName) {
+    const usersCollection = client.db('assuredLife').collection('users');
+    const userDoc = await usersCollection.findOne({ firebaseUid: authorId });
+    authorName = userDoc?.name || req.user.email;
+  }
+
+  if (!authorName) {
+    return res.status(400).json({ message: 'User name not available. Cannot create blog post.' });
+  }
 
   try {
     const newBlog = {
       title,
       content,
-      blogImage: blogImage || '', // Added blogImage with default empty string
+      blogImage: blogImage || '',
       authorId: authorId,
       author: authorName,
       publishDate: new Date(),
-      totalVisit: 0, // Initialize totalVisit to 0
+      totalVisit: 0,
     };
 
     const result = await blogsCollection.insertOne(newBlog);
@@ -80,26 +91,40 @@ const createBlog = async (req, res) => {
 };
 
 const getAgentBlogs = async (req, res) => {
-  const agentId = req.user.uid; // Get agent ID from authenticated user (Firebase UID)
-
+  const blogsCollection = client.db('assuredLife').collection('blogs');
+  const { uid, role } = req.user;
+  
   try {
-    const blogs = await blogsCollection.find({ authorId: agentId }).sort({ publishDate: -1 }).toArray();
-    res.status(200).json(blogs);
+    const query = {};
+    if (role === 'agent') {
+      query.authorId = uid;
+    }
+
+    const blogs = await blogsCollection.find(query).sort({ publishDate: -1 }).toArray();
+    res.status(200).json({ blogs });
   } catch (error) {
-    console.error('Error fetching agent blogs:', error);
-    res.status(500).json({ message: 'Server error fetching agent blogs.' });
+    console.error('[getAgentBlogs] An error occurred:', error);
+    res.status(500).json({ message: 'Server error while fetching blogs.' });
   }
 };
 
 const updateBlog = async (req, res) => {
+  const blogsCollection = client.db('assuredLife').collection('blogs');
   const { id } = req.params;
-  const { title, content, blogImage } = req.body; // Added blogImage
-  const authorId = req.user.uid;
+  const { title, content, blogImage } = req.body;
+  const { uid, role } = req.user;
 
   try {
+    let query = { _id: new ObjectId(id) };
+
+    // If the user is not an admin, they can only update their own blogs
+    if (role !== 'admin') {
+      query.authorId = uid;
+    }
+
     const result = await blogsCollection.updateOne(
-      { _id: new ObjectId(id), authorId: authorId }, // Ensure only author can update
-      { $set: { title, content, blogImage, updatedAt: new Date() } } // Added blogImage to update
+      query,
+      { $set: { title, content, blogImage, updatedAt: new Date() } }
     );
 
     if (result.matchedCount === 0) {
@@ -113,13 +138,18 @@ const updateBlog = async (req, res) => {
 };
 
 const deleteBlog = async (req, res) => {
+  const blogsCollection = client.db('assuredLife').collection('blogs');
   const { id } = req.params;
-  const authorId = req.user.uid;
+  const { uid, role } = req.user;
 
   try {
-    const result = await blogsCollection.deleteOne(
-      { _id: new ObjectId(id), authorId: authorId } // Ensure only author can delete
-    );
+    let query = { _id: new ObjectId(id) };
+
+    if (role !== 'admin') {
+      query.authorId = uid;
+    }
+
+    const result = await blogsCollection.deleteOne(query);
 
     if (result.deletedCount === 0) {
       return res.status(404).json({ message: 'Blog post not found or you are not authorized to delete it.' });
