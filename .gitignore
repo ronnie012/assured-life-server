@@ -5,3 +5,5 @@ node_modules
 
 # Local settings
 console.terminal.output.md
+
+.vercel

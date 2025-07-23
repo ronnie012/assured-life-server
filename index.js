@@ -1,19 +1,20 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const { connectDB } = require('./src/config/db');
 
 const app = express();
 const port = process.env.PORT || 5000;
 
 // Middleware
 app.use(cors({
-  origin: ['http://localhost:5173', 'http://127.0.0.1:5173', 'http://localhost:5174', 'http://127.0.0.1:5174'],
+  origin: ['http://localhost:5173', 'http://127.0.0.1:5173', 'http://localhost:5174', 'http://127.0.0.1:5174', 'https://assured-life.web.app'],
   credentials: true
 }));
 app.use(express.json());
 
 // Handle preflight requests for all routes
-// app.options('*', cors());
+// app.options('* ', cors());
 
 const authRoutes = require('./src/api/v1/routes/authRoutes');
 const policyRoutes = require('./src/api/v1/routes/policyRoutes');
@@ -76,6 +77,16 @@ app.use((err, req, res, next) => {
   res.status(500).send('Something broke!');
 });
 
-app.listen(port, '0.0.0.0', () => {
-  console.log(`Life Insurance server is running on port: ${port} and listening on all network interfaces.`);
-});
+// This block will only run when you start the server locally
+// with `node index.js` or `nodemon index.js`.
+// It will not run when deployed to Vercel.
+if (require.main === module) {
+  connectDB().then(() => {
+    app.listen(port, () => {
+      // console.log(`Life Insurance server is running on port: ${port}`);
+    });
+  });
+}
+
+// Export the app instance for Vercel's serverless environment
+module.exports = app;
