@@ -1,11 +1,8 @@
 const { ObjectId } = require('mongodb');
-const client = require('../../../config/db');
-
-const policiesCollection = client.db('assuredLife').collection('policies');
-const applicationsCollection = client.db('assuredLife').collection('applications');
-const usersCollection = client.db('assuredLife').collection('users');
+const { client } = require('../../../config/db');
 
 const getPopularPolicies = async (req, res) => {
+  const policiesCollection = client.db('assuredLife').collection('policies');
   console.log('Server: Attempting to fetch popular policies.');
   try {
     const popularPolicies = await policiesCollection.find({}).limit(6).toArray();
@@ -18,6 +15,7 @@ const getPopularPolicies = async (req, res) => {
 };
 
 const getAllPolicies = async (req, res) => {
+  const policiesCollection = client.db('assuredLife').collection('policies');
   console.log('Server: Attempting to fetch all policies.');
   try {
     const page = parseInt(req.query.page) || 1;
@@ -54,6 +52,7 @@ const getAllPolicies = async (req, res) => {
 };
 
 const getPolicyById = async (req, res) => {
+  const policiesCollection = client.db('assuredLife').collection('policies');
   console.log('Server: getPolicyById function entered. ID:', req.params.id);
   try {
     const policy = await policiesCollection.findOne({ _id: new ObjectId(req.params.id) });
@@ -68,6 +67,7 @@ const getPolicyById = async (req, res) => {
 };
 
 const createPolicy = async (req, res) => {
+  const policiesCollection = client.db('assuredLife').collection('policies');
   const { title, category, description, minAge, maxAge, coverageRange, durationOptions, basePremiumRate, policyImage } = req.body;
 
   try {
@@ -94,6 +94,7 @@ const createPolicy = async (req, res) => {
 };
 
 const updatePolicy = async (req, res) => {
+  const policiesCollection = client.db('assuredLife').collection('policies');
   const { id } = req.params;
   const { title, category, description, minAge, maxAge, coverageRange, durationOptions, basePremiumRate, policyImage } = req.body;
 
@@ -127,6 +128,7 @@ const updatePolicy = async (req, res) => {
 };
 
 const deletePolicy = async (req, res) => {
+  const policiesCollection = client.db('assuredLife').collection('policies');
   const { id } = req.params;
 
   try {
@@ -143,6 +145,8 @@ const deletePolicy = async (req, res) => {
 };
 
 const getAppliedPoliciesForUser = async (req, res) => {
+  const applicationsCollection = client.db('assuredLife').collection('applications');
+  const usersCollection = client.db('assuredLife').collection('users');
   const userId = req.user.uid; // Get user ID from authenticated user (Firebase UID)
   console.log('Fetching applied policies for Firebase UID:', userId);
 
@@ -184,7 +188,7 @@ const getAppliedPoliciesForUser = async (req, res) => {
       }
     ]).toArray();
 
-    console.log('Applications found:', applications);
+    // console.log('Applications found:', applications);
     res.status(200).json(applications);
   } catch (error) {
     console.error('Error fetching applied policies for user:', error);

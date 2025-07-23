@@ -1,8 +1,7 @@
-const client = require('../../../config/db');
-
-const faqsCollection = client.db('assuredLife').collection('faqs');
+const { client } = require('../../../config/db');
 
 const getAllFAQs = async (req, res) => {
+  const faqsCollection = client.db('assuredLife').collection('faqs');
   try {
     const faqs = await faqsCollection.find({}).sort({ createdAt: 1 }).toArray();
     res.status(200).json(faqs);

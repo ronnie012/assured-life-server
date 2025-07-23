@@ -1,9 +1,8 @@
 const { ObjectId } = require('mongodb');
-const client = require('../../../config/db');
-
-const transactionsCollection = client.db('assuredLife').collection('transactions');
+const { client } = require('../../../config/db');
 
 const getAllTransactions = async (req, res) => {
+  const transactionsCollection = client.db('assuredLife').collection('transactions');
   try {
     const transactions = await transactionsCollection.aggregate([
       {
@@ -60,6 +59,7 @@ const getAllTransactions = async (req, res) => {
 };
 
 const getUserTransactions = async (req, res) => {
+  const transactionsCollection = client.db('assuredLife').collection('transactions');
   const userId = req.user.uid; // Get user ID from authenticated user (Firebase UID)
 
   try {

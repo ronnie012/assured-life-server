@@ -1,10 +1,9 @@
 const { ObjectId } = require('mongodb');
-const client = require('../../../config/db');
-
-const applicationsCollection = client.db('assuredLife').collection('applications');
-const usersCollection = client.db('assuredLife').collection('users');
+const { client } = require('../../../config/db');
 
 const getAppliedPoliciesForUser = async (req, res) => {
+  const applicationsCollection = client.db('assuredLife').collection('applications');
+  const usersCollection = client.db('assuredLife').collection('users');
   const userId = req.user.uid; // Get user ID from authenticated user (Firebase UID)
   console.log('Fetching applied policies for Firebase UID:', userId);
 
@@ -46,7 +45,7 @@ const getAppliedPoliciesForUser = async (req, res) => {
       }
     ]).toArray();
 
-    console.log('Applications found:', applications);
+    // console.log('Applications found:', applications);
     res.status(200).json(applications);
   } catch (error) {
     console.error('Error fetching applied policies for user:', error);

@@ -1,9 +1,8 @@
 const { ObjectId } = require('mongodb');
-const client = require('../../../config/db');
-
-const usersCollection = client.db('assuredLife').collection('users');
+const { client } = require('../../../config/db');
 
 const getUserProfile = async (req, res) => {
+  const usersCollection = client.db('assuredLife').collection('users');
   const userId = req.user.uid; // Get user ID from authenticated user (Firebase UID)
   console.log('Backend: Fetching profile for Firebase UID:', userId);
 
@@ -21,7 +20,8 @@ const getUserProfile = async (req, res) => {
 };
 
 const updateProfile = async (req, res) => {
-    const userId = req.user.uid;
+  const usersCollection = client.db('assuredLife').collection('users');
+  const userId = req.user.uid;
   const { name, photoURL } = req.body;
 
   console.log('Update Profile Request:', { userId, name, photoURL });
@@ -43,7 +43,7 @@ const updateProfile = async (req, res) => {
       { returnDocument: 'after', projection: { password: 0 } } // Return the updated document, exclude password
     );
 
-    console.log('MongoDB findOneAndUpdate result:', updatedUser);
+    // console.log('MongoDB findOneAndUpdate result:', updatedUser);
 
     if (!updatedUser) {
       return res.status(404).json({ message: 'User not found.' });

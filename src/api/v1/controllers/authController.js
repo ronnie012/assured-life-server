@@ -1,10 +1,9 @@
 const { ObjectId } = require('mongodb');
-const client = require('../../../config/db');
-
-const usersCollection = client.db('assuredLife').collection('users');
+const { client } = require('../../../config/db');
 
 const registerUser = async (req, res) => {
   const { uid, email, name, photoURL } = req.body; // Expect Firebase UID and user info from frontend
+  const usersCollection = client.db('assuredLife').collection('users');
 
   try {
     // Check if user already exists in our DB using Firebase UID

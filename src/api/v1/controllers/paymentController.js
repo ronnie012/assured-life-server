@@ -1,12 +1,10 @@
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const { ObjectId } = require('mongodb');
-const client = require('../../../config/db');
-
-const applicationsCollection = client.db('life-insurance').collection('applications');
-const policiesCollection = client.db('life-insurance').collection('policies');
-const transactionsCollection = client.db('assuredLife').collection('transactions');
+const { client } = require('../../../config/db');
 
 const createPaymentIntent = async (req, res) => {
+  const applicationsCollection = client.db('assuredLife').collection('applications');
+  const policiesCollection = client.db('assuredLife').collection('policies');
   const { amount, policyId, applicationId } = req.body; // amount in cents
   const userId = req.user.uid; // From authenticated user (Firebase UID)
 
@@ -38,6 +36,9 @@ const createPaymentIntent = async (req, res) => {
 };
 
 const savePaymentInfo = async (req, res) => {
+  const applicationsCollection = client.db('assuredLife').collection('applications');
+  const policiesCollection = client.db('assuredLife').collection('policies');
+  const transactionsCollection = client.db('assuredLife').collection('transactions');
   const { transactionId, amount, currency, status, paymentMethod, policyId, applicationId } = req.body;
     const userId = req.user.uid;
 

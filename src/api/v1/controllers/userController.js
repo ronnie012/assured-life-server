@@ -1,10 +1,5 @@
 const { ObjectId } = require('mongodb');
-const client = require('../../../config/db');
-
-
-
-const usersCollection = client.db('assuredLife').collection('users');
-const agentsCollection = client.db('assuredLife').collection('agents');
+const { client } = require('../../../config/db');
 
 const getAllUsers = async (req, res) => {
   const usersCollection = client.db('assuredLife').collection('users');
@@ -109,6 +104,7 @@ const updateUserRole = async (req, res) => {
 };
 
 const upsertFirebaseUser = async (req, res) => {
+  const usersCollection = client.db('assuredLife').collection('users');
   const { uid, email, displayName, photoURL } = req.body;
 
   const DEFAULT_AVATAR_URL = `https://www.gravatar.com/avatar/?d=mp`; // Generic Mystery Person avatar
@@ -145,7 +141,7 @@ const upsertFirebaseUser = async (req, res) => {
 
     const result = await usersCollection.findOneAndUpdate(filter, updateDoc, options);
 
-    console.log('MongoDB findOneAndUpdate result:', result);
+    // console.log('MongoDB findOneAndUpdate result:', result);
 
     if (result) {
       res.status(200).json(result);

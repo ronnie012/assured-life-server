@@ -1,5 +1,5 @@
 const { ObjectId } = require('mongodb');
-const client = require('../../../config/db');
+const { client } = require('../../../config/db');
 
 const getAllBlogs = async (req, res) => {
   const blogsCollection = client.db('assuredLife').collection('blogs');
@@ -58,11 +58,11 @@ const getLatestBlogs = async (req, res) => {
 
 const createBlog = async (req, res) => {
   const blogsCollection = client.db('assuredLife').collection('blogs');
+  const usersCollection = client.db('assuredLife').collection('users');
   const { title, content, blogImage } = req.body;
   const authorId = req.user.uid;
   let authorName = req.user.displayName || req.user.name;
   if (!authorName) {
-    const usersCollection = client.db('assuredLife').collection('users');
     const userDoc = await usersCollection.findOne({ firebaseUid: authorId });
     authorName = userDoc?.name || req.user.email;
   }

@@ -1,11 +1,8 @@
 const { ObjectId } = require('mongodb');
-const client = require('../../../config/db');
-
-const applicationsCollection = client.db('assuredLife').collection('applications');
-const usersCollection = client.db('assuredLife').collection('users');
-const policiesCollection = client.db('assuredLife').collection('policies');
+const { client } = require('../../../config/db');
 
 const submitApplication = async (req, res) => {
+  const applicationsCollection = client.db('assuredLife').collection('applications');
   const { userId, policyId, personalData, nomineeData, healthDisclosure } = req.body;
 
   try {
@@ -28,6 +25,7 @@ const submitApplication = async (req, res) => {
 };
 
 const getAllApplications = async (req, res) => {
+  const applicationsCollection = client.db('assuredLife').collection('applications');
   try {
     const applications = await applicationsCollection.aggregate([
       {
@@ -79,6 +77,7 @@ const getAllApplications = async (req, res) => {
 };
 
 const updateApplicationStatus = async (req, res) => {
+  const applicationsCollection = client.db('assuredLife').collection('applications');
   const { id } = req.params;
   const { status, feedback } = req.body;
 
@@ -99,6 +98,8 @@ const updateApplicationStatus = async (req, res) => {
 };
 
 const assignAgentToApplication = async (req, res) => {
+  const applicationsCollection = client.db('assuredLife').collection('applications');
+  const usersCollection = client.db('assuredLife').collection('users');
   const { id } = req.params;
   const { agentId } = req.body;
 
@@ -125,6 +126,7 @@ const assignAgentToApplication = async (req, res) => {
 };
 
 const getAssignedApplications = async (req, res) => {
+  const applicationsCollection = client.db('assuredLife').collection('applications');
   const agentId = req.user.userId; // Get agent ID from authenticated user
 
   try {
@@ -180,6 +182,7 @@ const getAssignedApplications = async (req, res) => {
 };
 
 const getUserApplications = async (req, res) => {
+  const applicationsCollection = client.db('assuredLife').collection('applications');
   const userId = req.user.uid; // Get user ID from authenticated user (Firebase UID)
 
   try {
