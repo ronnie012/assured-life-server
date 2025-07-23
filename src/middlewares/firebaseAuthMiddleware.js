@@ -1,5 +1,5 @@
 const admin = require('../config/firebaseAdmin');
-const client = require('../config/db'); // Import MongoDB client
+const { client } = require('../config/db'); // Import MongoDB client
 
 const usersCollection = client.db('assuredLife').collection('users'); // Access users collection
 
@@ -24,7 +24,7 @@ const firebaseAuthMiddleware = async (req, res, next) => {
     }
 
     req.user = { ...decodedToken, role: user.role }; // Attach decoded token and role
-    console.log('Middleware: req.user after assignment:', req.user); // Added logging for req.user object
+    // console.log('Middleware: req.user after assignment:', req.user); // Added logging for req.user object
     next();
   } catch (error) {
     console.error('Error verifying Firebase ID token or fetching user role:', error);
