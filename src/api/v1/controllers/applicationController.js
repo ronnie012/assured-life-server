@@ -3,20 +3,24 @@ const { client } = require('../../../config/db');
 
 const submitApplication = async (req, res) => {
   const applicationsCollection = client.db('assuredLife').collection('applications');
-  const { userId, policyId, personalData, nomineeData, healthDisclosure } = req.body;
+  const { userId, policyId, personalData, nomineeData, healthDisclosure, quoteData } = req.body;
 
   try {
     const newApplication = {
-      userId: new ObjectId(userId),
+      userId: userId, // Store as string (Firebase UID)
       policyId: new ObjectId(policyId),
       personalData,
       nomineeData,
       healthDisclosure,
-      status: 'Pending',
+      quoteData, // Add this line
+      status: 'Pending', // Ensure status is Pending on submission
+      paymentStatus: 'Unpaid', // Initialize payment status
       submittedAt: new Date(),
     };
 
+    console.log('Backend: Inserting new application:', newApplication);
     const result = await applicationsCollection.insertOne(newApplication);
+    console.log('Backend: Application insert result:', result);
     res.status(201).json({ message: 'Application submitted successfully', applicationId: result.insertedId });
   } catch (error) {
     console.error('Error submitting application:', error);
@@ -32,7 +36,7 @@ const getAllApplications = async (req, res) => {
         $lookup: {
           from: 'users',
           localField: 'userId',
-          foreignField: '_id',
+          foreignField: 'firebaseUid',
           as: 'applicantInfo'
         }
       },
@@ -78,13 +82,25 @@ const getAllApplications = async (req, res) => {
 
 const updateApplicationStatus = async (req, res) => {
   const applicationsCollection = client.db('assuredLife').collection('applications');
+  const policiesCollection = client.db('assuredLife').collection('policies');
   const { id } = req.params;
-  const { status, feedback } = req.body;
+  const { status, feedback, policyId } = req.body;
 
   try {
+    const updateDoc = { $set: { status, feedback, updatedAt: new Date() } };
+
+    if (status === 'Paid' && policyId) {
+      updateDoc.$set.paymentStatus = 'Paid';
+      // Increment purchase count for the policy
+      await policiesCollection.updateOne(
+        { _id: new ObjectId(policyId) },
+        { $inc: { purchaseCount: 1 } }
+      );
+    }
+
     const result = await applicationsCollection.updateOne(
       { _id: new ObjectId(id) },
-      { $set: { status, feedback, updatedAt: new Date() } }
+      updateDoc
     );
 
     if (result.matchedCount === 0) {
@@ -100,19 +116,32 @@ const updateApplicationStatus = async (req, res) => {
 const assignAgentToApplication = async (req, res) => {
   const applicationsCollection = client.db('assuredLife').collection('applications');
   const usersCollection = client.db('assuredLife').collection('users');
+  const agentsCollection = client.db('assuredLife').collection('agents');
   const { id } = req.params;
   const { agentId } = req.body;
 
   try {
-    // Verify agentId exists and belongs to an agent role
-    const agent = await usersCollection.findOne({ _id: new ObjectId(agentId), role: 'agent' });
-    if (!agent) {
-      return res.status(400).json({ message: 'Invalid agent ID or agent not found.' });
+    // 1. Find the agent document in the agents collection using the provided agentId
+    const agentDoc = await agentsCollection.findOne({ _id: new ObjectId(agentId) });
+
+    if (!agentDoc) {
+      return res.status(400).json({ message: 'Agent document not found in agents collection.' });
     }
 
+    // 2. Get the actual userId (ObjectId) from the found agent document
+    const actualAgentUserId = agentDoc.userId;
+
+    // 3. Verify this actualAgentUserId exists in the users collection and has the 'agent' role
+    const agentUser = await usersCollection.findOne({ _id: actualAgentUserId, role: 'agent' });
+
+    if (!agentUser) {
+      return res.status(400).json({ message: 'Invalid agent ID or agent not found in users collection with agent role.' });
+    }
+
+    // 4. Update the application with the assigned agent's _id (from the users collection)
     const result = await applicationsCollection.updateOne(
       { _id: new ObjectId(id) },
-      { $set: { assignedAgentId: new ObjectId(agentId), updatedAt: new Date() } }
+      { $set: { assignedAgentId: actualAgentUserId, updatedAt: new Date() } }
     );
 
     if (result.matchedCount === 0) {
@@ -128,6 +157,7 @@ const assignAgentToApplication = async (req, res) => {
 const getAssignedApplications = async (req, res) => {
   const applicationsCollection = client.db('assuredLife').collection('applications');
   const agentId = req.user.userId; // Get agent ID from authenticated user
+  console.log('Backend: getAssignedApplications - agentId from req.user:', agentId);
 
   try {
     const applications = await applicationsCollection.aggregate([
@@ -138,7 +168,7 @@ const getAssignedApplications = async (req, res) => {
         $lookup: {
           from: 'users',
           localField: 'userId',
-          foreignField: '_id',
+          foreignField: 'firebaseUid',
           as: 'applicantInfo'
         }
       },
@@ -173,6 +203,7 @@ const getAssignedApplications = async (req, res) => {
         $sort: { submittedAt: -1 }
       }
     ]).toArray();
+    console.log('Backend: getAssignedApplications - fetched applications:', applications);
 
     res.status(200).json(applications);
   } catch (error) {
@@ -188,10 +219,7 @@ const getUserApplications = async (req, res) => {
   try {
     const applications = await applicationsCollection.aggregate([
       {
-        $match: { 
-          userId: userId,
-          status: 'Approved' 
-        }
+        $match: { userId: userId }
       },
       {
         $lookup: {
@@ -205,40 +233,26 @@ const getUserApplications = async (req, res) => {
         $unwind: '$policyInfo'
       },
       {
-        $lookup: {
-          from: 'claims',
-          let: { policyId: '$policyId', userId: '$userId' },
-          pipeline: [
-            { $match: { $expr: { $and: [ { $eq: [ '$policyId', '$policyId' ] }, { $eq: [ '$userId', '$userId' ] } ] } } },
-            { $sort: { submittedAt: -1 } },
-            { $limit: 1 }
-          ],
-          as: 'claimInfo'
-        }
-      },
-      {
-        $addFields: {
-          claimStatus: { $ifNull: [ { $arrayElemAt: [ '$claimInfo.status', 0 ] }, 'No Claim' ] }
-        }
-      },
-      {
         $project: {
           _id: 1,
-          'policyName': '$policyInfo.title',
           status: 1,
           submittedAt: 1,
+          feedback: 1,
+          claimStatus: 1,
           personalData: 1,
           nomineeData: 1,
           healthDisclosure: 1,
-          feedback: 1, // Include feedback
-          claimStatus: 1,
+          policyName: '$policyInfo.title',
+          policyInfo: '$policyInfo',
+          quoteData: '$quoteData',
+          paymentStatus: '$paymentStatus' // Include paymentStatus
         }
       },
       {
         $sort: { submittedAt: -1 }
       }
     ]).toArray();
-
+    console.log('Backend: User applications fetched:', JSON.stringify(applications, null, 2));
     res.status(200).json(applications);
   } catch (error) {
     console.error('Error fetching user applications:', error);
