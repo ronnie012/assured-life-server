@@ -27,7 +27,7 @@ const getAllAgents = async (req, res) => {
       },
       {
         $project: {
-          _id: 1,
+          _id: '$userInfo._id', // Send the user _id as _id
           name: '$userInfo.name',
           photo: '$userInfo.photoURL',
           experience: 1,
@@ -67,7 +67,7 @@ const getFeaturedAgents = async (req, res) => {
       },
       {
         $project: {
-          _id: 1,
+          _id: '$userInfo._id', // Send the user _id as _id
           name: '$userInfo.name',
           photo: '$userInfo.photoURL',
           experience: 1,

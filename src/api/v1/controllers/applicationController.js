@@ -116,33 +116,23 @@ const updateApplicationStatus = async (req, res) => {
 const assignAgentToApplication = async (req, res) => {
   const applicationsCollection = client.db('assuredLife').collection('applications');
   const usersCollection = client.db('assuredLife').collection('users');
-  const agentsCollection = client.db('assuredLife').collection('agents');
   const { id } = req.params;
   const { agentId } = req.body;
 
   try {
-    // 1. Find the agent document in the agents collection using the provided agentId
-    const agentDoc = await agentsCollection.findOne({ _id: new ObjectId(agentId) });
-
-    if (!agentDoc) {
-      return res.status(400).json({ message: 'Agent document not found in agents collection.' });
-    }
-
-    // 2. Get the actual userId (ObjectId) from the found agent document
-    const actualAgentUserId = agentDoc.userId;
-
-    // 3. Verify this actualAgentUserId exists in the users collection and has the 'agent' role
-    const agentUser = await usersCollection.findOne({ _id: actualAgentUserId, role: 'agent' });
+    const agentUser = await usersCollection.findOne({ _id: new ObjectId(agentId) });
 
     if (!agentUser) {
       return res.status(400).json({ message: 'Invalid agent ID or agent not found in users collection with agent role.' });
     }
 
-    // 4. Update the application with the assigned agent's _id (from the users collection)
     const result = await applicationsCollection.updateOne(
       { _id: new ObjectId(id) },
-      { $set: { assignedAgentId: actualAgentUserId, updatedAt: new Date() } }
+      { $set: { assignedAgentId: agentUser._id, updatedAt: new Date() } }
     );
+    console.log('Backend: assignAgentToApplication - assignedAgentId being set:', agentUser._id);
+    console.log('Backend: assignAgentToApplication - application ID being updated:', id);
+    console.log('Backend: assignAgentToApplication - agentId received:', agentId);
 
     if (result.matchedCount === 0) {
       return res.status(404).json({ message: 'Application not found.' });
@@ -156,13 +146,19 @@ const assignAgentToApplication = async (req, res) => {
 
 const getAssignedApplications = async (req, res) => {
   const applicationsCollection = client.db('assuredLife').collection('applications');
-  const agentId = req.user.userId; // Get agent ID from authenticated user
-  console.log('Backend: getAssignedApplications - agentId from req.user:', agentId);
+  const agentId = req.user.userId; // Get agent's MongoDB _id from authenticated user
+  console.log('Backend: getAssignedApplications - agentId from req.user.userId:', agentId, 'Type:', typeof agentId);
 
+  if (!agentId) {
+    console.log('Backend: getAssignedApplications - agentId is missing from req.user.');
+    return res.status(400).json({ message: 'Agent ID is required.' });
+  }
   try {
+    const objectAgentId = new ObjectId(agentId);
+    console.log('Backend: getAssignedApplications - Converted agentId to ObjectId:', objectAgentId);
     const applications = await applicationsCollection.aggregate([
       {
-        $match: { assignedAgentId: new ObjectId(agentId) }
+        $match: { assignedAgentId: objectAgentId }
       },
       {
         $lookup: {

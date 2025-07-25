@@ -1,5 +1,6 @@
 const express = require('express');
 const { getFeaturedAgents, getAgentApplications, approveAgentApplication, rejectAgentApplication, getAllApprovedAgents, getAllAgents, submitAgentApplication } = require('../controllers/agentController');
+const { getAssignedApplications } = require('../controllers/applicationController');
 const firebaseAuthMiddleware = require('../../../middlewares/firebaseAuthMiddleware');
 const checkRole = require('../../../middlewares/roleCheckMiddleware');
 
@@ -14,5 +15,6 @@ router.put('/applications/:id/approve', firebaseAuthMiddleware, checkRole(['admi
 router.put('/applications/:id/reject', firebaseAuthMiddleware, checkRole(['admin']), rejectAgentApplication);
 router.get('/approved', firebaseAuthMiddleware, checkRole(['admin']), getAllApprovedAgents);
 router.post('/applications', firebaseAuthMiddleware, submitAgentApplication);
+router.get('/assigned-applications', firebaseAuthMiddleware, checkRole(['agent']), getAssignedApplications);
 
 module.exports = router;

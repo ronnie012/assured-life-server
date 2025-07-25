@@ -17,14 +17,17 @@ const firebaseAuthMiddleware = async (req, res, next) => {
     
     // Fetch user role from MongoDB
     const user = await usersCollection.findOne({ firebaseUid: decodedToken.uid });
-    console.log('Middleware: User fetched from DB:', user); // Added logging for user object
+    console.log('Middleware: User fetched from DB:', user);
 
     if (!user) {
+      console.log('Middleware: User not found in database for Firebase UID:', decodedToken.uid);
       return res.status(404).send('User not found in database.');
     }
 
-    req.user = { ...decodedToken, role: user.role, userId: user._id }; // Attach decoded token, role, and MongoDB _id
-    // console.log('Middleware: req.user after assignment:', req.user); // Added logging for req.user object
+    req.user = { ...decodedToken, role: user.role, userId: user._id };
+    console.log('Middleware: req.user object after population:', req.user);
+    console.log('Middleware: req.user.userId (MongoDB _id):', req.user.userId, 'Type:', typeof req.user.userId);
+    console.log('Middleware: req.user.role:', req.user.role);
     next();
   } catch (error) {
     console.error('Error verifying Firebase ID token or fetching user role:', error);
