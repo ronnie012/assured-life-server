@@ -10,7 +10,7 @@ const submitClaim = async (req, res) => {
   try {
     // Optional: Verify if the policy is active for the user
     const application = await applicationsCollection.findOne({
-      userId: new ObjectId(userId),
+      userId: userId,
       policyId: new ObjectId(policyId),
       status: 'Approved', // Only allow claims for approved policies
     });

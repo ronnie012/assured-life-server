@@ -3,6 +3,8 @@ const { ObjectId } = require('mongodb');
 const { client } = require('../../../config/db');
 
 const createPaymentIntent = async (req, res) => {
+  console.log('createPaymentIntent - Request Body:', req.body);
+  console.log('createPaymentIntent - Authenticated User ID:', req.user.uid);
   const applicationsCollection = client.db('assuredLife').collection('applications');
   const policiesCollection = client.db('assuredLife').collection('policies');
   const { amount, policyId, applicationId } = req.body; // amount in cents
@@ -10,7 +12,7 @@ const createPaymentIntent = async (req, res) => {
 
   try {
     // Optional: Verify policy and application exist and belong to the user
-    const application = await applicationsCollection.findOne({ _id: new ObjectId(applicationId), userId: new ObjectId(userId) });
+    const application = await applicationsCollection.findOne({ _id: new ObjectId(applicationId), userId: userId });
     if (!application) {
       return res.status(404).json({ message: 'Application not found or does not belong to you.' });
     }
@@ -44,7 +46,7 @@ const savePaymentInfo = async (req, res) => {
 
   try {
     const newTransaction = {
-      userId: new ObjectId(userId),
+      userId: userId,
       policyId: new ObjectId(policyId),
       applicationId: new ObjectId(applicationId),
       transactionId,
