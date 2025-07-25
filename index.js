@@ -35,7 +35,40 @@ const Policy = require('./src/models/Policy');
 const Review = require('./src/models/Review');
 
 app.get('/', (req, res) => {
-  res.send('Life Insurance server is running...');
+  res.send(`
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>AssuredLife Server Status</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+        <style>
+            @keyframes pulse-green {
+                0%, 100% { background-color: #22c55e; }
+                50% { background-color: #16a34a; }
+            }
+            .animate-pulse-green {
+                animation: pulse-green 2s infinite;
+            }
+        </style>
+    </head>
+    <body class="flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 text-white p-4">
+        <div class="text-center bg-gray-700 p-8 rounded-lg shadow-2xl border border-gray-600">
+            <h1 class="text-5xl font-extrabold mb-4 text-green-400">AssuredLife Server</h1>
+            <p class="text-xl mb-6 text-gray-300">Your reliable backend is up and running!</p>
+            <div class="flex items-center justify-center mb-8">
+                <span class="relative flex h-5 w-5 mr-3">
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-5 w-5 bg-green-500 animate-pulse-green"></span>
+                </span>
+                <span class="text-2xl font-semibold text-green-300">Status: Online</span>
+            </div>
+            <p class="text-md text-gray-400">Serving API requests for your AssuredLife application.</p>
+        </div>
+    </body>
+    </html>
+  `);
 });
 
 // API Routes
@@ -83,7 +116,7 @@ app.use((err, req, res, next) => {
 if (require.main === module) {
   connectDB().then(() => {
     app.listen(port, () => {
-      // console.log(`Life Insurance server is running on port: ${port}`);
+      console.log(`AssuredLife server is running on port: ${port}`);
     });
   });
 }

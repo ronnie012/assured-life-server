@@ -23,7 +23,7 @@ const firebaseAuthMiddleware = async (req, res, next) => {
       return res.status(404).send('User not found in database.');
     }
 
-    req.user = { ...decodedToken, role: user.role }; // Attach decoded token and role
+    req.user = { ...decodedToken, role: user.role, userId: user._id }; // Attach decoded token, role, and MongoDB _id
     // console.log('Middleware: req.user after assignment:', req.user); // Added logging for req.user object
     next();
   } catch (error) {
