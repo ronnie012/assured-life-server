@@ -89,13 +89,13 @@ const updateApplicationStatus = async (req, res) => {
   try {
     const updateDoc = { $set: { status, feedback, updatedAt: new Date() } };
 
-    if (status === 'Paid' && policyId) {
-      updateDoc.$set.paymentStatus = 'Paid';
-      // Increment purchase count for the policy
-      await policiesCollection.updateOne(
+    if (status === 'Approved' && policyId) {
+      console.log('Backend: Attempting to increment purchase count for policyId:', policyId);
+      const updateResult = await policiesCollection.updateOne(
         { _id: new ObjectId(policyId) },
         { $inc: { purchaseCount: 1 } }
       );
+      console.log('Backend: Policy purchase count update result:', updateResult);
     }
 
     const result = await applicationsCollection.updateOne(
