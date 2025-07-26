@@ -14,7 +14,7 @@ const submitApplication = async (req, res) => {
       healthDisclosure,
       quoteData, // Add this line
       status: 'Pending', // Ensure status is Pending on submission
-      paymentStatus: 'Unpaid', // Initialize payment status
+      paymentStatus: 'Due', // Initialize payment status as 'Due'
       submittedAt: new Date(),
     };
 

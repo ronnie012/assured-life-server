@@ -41,13 +41,21 @@ const savePaymentInfo = async (req, res) => {
   const applicationsCollection = client.db('assuredLife').collection('applications');
   const policiesCollection = client.db('assuredLife').collection('policies');
   const transactionsCollection = client.db('assuredLife').collection('transactions');
-  const { transactionId, amount, currency, status, paymentMethod, policyId, applicationId } = req.body;
-    const userId = req.user.uid;
+  const { transactionId, amount, currency, status, paymentMethod, applicationId } = req.body; // Removed policyId from destructuring
+  console.log('Backend: savePaymentInfo - received applicationId:', applicationId);
+  const userId = req.user.uid;
 
   try {
+    // Fetch the application to get the correct policyId
+    const application = await applicationsCollection.findOne({ _id: new ObjectId(applicationId) });
+    if (!application) {
+      return res.status(404).json({ message: 'Application not found.' });
+    }
+    const policyId = application.policyId; // Get policyId from the application
+
     const newTransaction = {
       userId: userId,
-      policyId: new ObjectId(policyId),
+      policyId: policyId, // Use the policyId from the application
       applicationId: new ObjectId(applicationId),
       transactionId,
       amount,

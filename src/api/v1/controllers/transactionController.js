@@ -31,7 +31,7 @@ const getAllTransactions = async (req, res) => {
         }
       },
       {
-        $unwind: '$policyInfo'
+        $unwind: { path: '$policyInfo', preserveNullAndEmptyArrays: true }
       },
       {
         $project: {
@@ -65,18 +65,23 @@ const getUserTransactions = async (req, res) => {
   try {
     const transactions = await transactionsCollection.aggregate([
       {
-        $match: { userId: new ObjectId(userId) }
+        $match: { userId: userId }
+      },
+      {
+        $addFields: {
+          policyObjectId: { $toObjectId: "$policyId" }
+        }
       },
       {
         $lookup: {
           from: 'policies',
-          localField: 'policyId',
+          localField: 'policyObjectId',
           foreignField: '_id',
           as: 'policyInfo'
         }
       },
       {
-        $unwind: '$policyInfo'
+        $unwind: { path: '$policyInfo', preserveNullAndEmptyArrays: true }
       },
       {
         $project: {
@@ -94,6 +99,7 @@ const getUserTransactions = async (req, res) => {
         $sort: { createdAt: -1 }
       }
     ]).toArray();
+    console.log('Backend: User transactions fetched:', JSON.stringify(transactions, null, 2));
 
     res.status(200).json(transactions);
   } catch (error) {
