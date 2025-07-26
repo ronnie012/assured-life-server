@@ -30,6 +30,7 @@ const submitApplication = async (req, res) => {
 
 const getAllApplications = async (req, res) => {
   const applicationsCollection = client.db('assuredLife').collection('applications');
+  console.log('Backend: getAllApplications - Function entered.');
   try {
     const applications = await applicationsCollection.aggregate([
       {
@@ -73,6 +74,7 @@ const getAllApplications = async (req, res) => {
       }
     ]).toArray();
 
+    console.log('Backend: getAllApplications - Fetched applications:', JSON.stringify(applications, null, 2));
     res.status(200).json(applications);
   } catch (error) {
     console.error('Error fetching all applications:', error);
@@ -256,4 +258,66 @@ const getUserApplications = async (req, res) => {
   }
 };
 
-module.exports = { submitApplication, getAllApplications, updateApplicationStatus, assignAgentToApplication, getAssignedApplications, getUserApplications };
+const getApplicationById = async (req, res) => {
+  const applicationsCollection = client.db('assuredLife').collection('applications');
+  const { id } = req.params;
+  const userId = req.user.uid; // From authenticated user (Firebase UID)
+
+  try {
+    console.log('Backend: getApplicationById - Received ID:', id);
+    const objectId = new ObjectId(id);
+    console.log('Backend: getApplicationById - Converted ObjectId:', objectId);
+    const application = await applicationsCollection.aggregate([
+      {
+        $match: { _id: objectId }
+      },
+      {
+        $lookup: {
+          from: 'policies',
+          localField: 'policyId',
+          foreignField: '_id',
+          as: 'policyInfo'
+        }
+      },
+      {
+        $unwind: '$policyInfo'
+      },
+      {
+        $project: {
+          _id: 1,
+          userId: 1, // Include userId
+          status: 1,
+          submittedAt: 1,
+          feedback: 1,
+          claimStatus: 1,
+          personalData: 1,
+          nomineeData: 1,
+          healthDisclosure: 1,
+          policyName: '$policyInfo.title',
+          policyInfo: '$policyInfo',
+          quoteData: '$quoteData',
+          paymentStatus: '$paymentStatus'
+        }
+      }
+    ]).toArray();
+
+    if (application.length === 0) {
+      return res.status(404).json({ message: 'Application not found.' });
+    }
+
+    // Optional: Add authorization check if needed (e.g., only owner or admin can view)
+    console.log('Backend: getApplicationById - Application userId:', application[0].userId);
+    console.log('Backend: getApplicationById - Authenticated userId (req.user.uid):', userId);
+    console.log('Backend: getApplicationById - Authenticated user role (req.user.role):', req.user.role);
+    if (application[0].userId !== userId && req.user.role !== 'admin' && req.user.role !== 'agent') {
+      return res.status(403).json({ message: 'Forbidden: You do not have permission to view this application.' });
+    }
+
+    res.status(200).json(application[0]);
+  } catch (error) {
+    console.error('Error fetching application by ID:', error);
+    res.status(500).json({ message: 'Server error fetching application.' });
+  }
+};
+
+module.exports = { submitApplication, getAllApplications, updateApplicationStatus, assignAgentToApplication, getAssignedApplications, getUserApplications, getApplicationById };
