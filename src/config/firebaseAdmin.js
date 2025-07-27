@@ -1,7 +1,6 @@
 const admin = require('firebase-admin');
 const path = require('path');
 
-
 try {
     let serviceAccount;
     if (process.env.NODE_ENV === 'production') {
@@ -9,7 +8,11 @@ try {
         if (!serviceAccountString) {
             throw new Error('FIREBASE_SERVICE_ACCOUNT_JSON is not defined in environment variables for production.');
         }
-        serviceAccount = JSON.parse(serviceAccountString);
+        try {
+            serviceAccount = JSON.parse(serviceAccountString);
+        } catch (parseError) {
+            throw new Error('Failed to parse FIREBASE_SERVICE_ACCOUNT_JSON: ' + parseError.message);
+        }
     } else {
         const serviceAccountPath = process.env.FIREBASE_SERVICE_ACCOUNT_PATH;
         if (!serviceAccountPath) {
@@ -24,7 +27,7 @@ try {
         });
     }
 } catch (error) {
-    console.error('Firebase Admin Initialization Error:', error.message);
+    console.error('Firebase Admin Initialization Error (Caught):', error);
     process.exit(1);
 }
 

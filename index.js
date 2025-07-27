@@ -42,29 +42,103 @@ app.get('/', (req, res) => {
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>AssuredLife Server Status</title>
-        <script src="https://cdn.tailwindcss.com"></script>
         <style>
+            body {
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                margin: 0;
+                padding: 0;
+                background: linear-gradient(to bottom right, #1a202c, #2d3748); /* from-gray-900 to-gray-800 */
+                color: #ffffff; /* text-white */
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                min-height: 100vh;
+                text-align: center;
+            }
+            .container {
+                background-color: #4a5568; /* bg-gray-700 */
+                padding: 2rem; /* p-8 */
+                border-radius: 0.5rem; /* rounded-lg */
+                box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); /* shadow-2xl */
+                border: 1px solid #4a5568; /* border border-gray-600 */
+            }
+            h1 {
+                font-size: 3rem; /* text-5xl */
+                font-weight: 800; /* font-extrabold */
+                margin-bottom: 1rem; /* mb-4 */
+                color: #68d391; /* text-green-400 */
+            }
+            p {
+                font-size: 1.25rem; /* text-xl */
+                margin-bottom: 1.5rem; /* mb-6 */
+                color: #a0aec0; /* text-gray-300 */
+            }
+            .status-indicator-wrapper {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin-bottom: 2rem; /* mb-8 */
+            }
+            .status-dot-outer {
+                position: relative;
+                display: flex;
+                height: 1.25rem; /* h-5 */
+                width: 1.25rem; /* w-5 */
+                margin-right: 0.75rem; /* mr-3 */
+            }
+            .status-dot-ping {
+                animation: ping 1s cubic-bezier(0, 0, 0.2, 1) infinite;
+                position: absolute;
+                display: inline-flex;
+                height: 100%;
+                width: 100%;
+                border-radius: 9999px; /* rounded-full */
+                background-color: #68d391; /* bg-green-400 */
+                opacity: 0.75;
+            }
+            .status-dot-inner {
+                position: relative;
+                display: inline-flex;
+                border-radius: 9999px; /* rounded-full */
+                height: 1.25rem; /* h-5 */
+                width: 1.25rem; /* w-5 */
+                background-color: #48bb78; /* bg-green-500 */
+                animation: pulse-green 2s infinite;
+            }
+            .status-text {
+                font-size: 1.5rem; /* text-2xl */
+                font-weight: 600; /* font-semibold */
+                color: #9ae6b4; /* text-green-300 */
+            }
+            .api-requests-text {
+                font-size: 1rem; /* text-md */
+                color: #cbd5e0; /* text-gray-400 */
+            }
+
             @keyframes pulse-green {
                 0%, 100% { background-color: #22c55e; }
                 50% { background-color: #16a34a; }
             }
-            .animate-pulse-green {
-                animation: pulse-green 2s infinite;
+            @keyframes ping {
+                75%, 100% {
+                    transform: scale(2);
+                    opacity: 0;
+                }
             }
         </style>
     </head>
-    <body class="flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 text-white p-4">
-        <div class="text-center bg-gray-700 p-8 rounded-lg shadow-2xl border border-gray-600">
-            <h1 class="text-5xl font-extrabold mb-4 text-green-400">AssuredLife Server</h1>
-            <p class="text-xl mb-6 text-gray-300">Your reliable backend is up and running!</p>
-            <div class="flex items-center justify-center mb-8">
-                <span class="relative flex h-5 w-5 mr-3">
-                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                    <span class="relative inline-flex rounded-full h-5 w-5 bg-green-500 animate-pulse-green"></span>
+    <body>
+        <div class="container">
+            <h1>AssuredLife Server</h1>
+            <p>Reliable backend is up and running!</p>
+            <div class="status-indicator-wrapper">
+                <span class="status-dot-outer">
+                    <span class="status-dot-ping"></span>
+                    <span class="status-dot-inner"></span>
                 </span>
-                <span class="text-2xl font-semibold text-green-300">Status: Online</span>
+                <span class="status-text">Status: Online</span>
             </div>
-            <p class="text-md text-gray-400">Serving API requests for your AssuredLife application.</p>
+            <p class="api-requests-text">Serving API requests for AssuredLife web app.</p>
         </div>
     </body>
     </html>
