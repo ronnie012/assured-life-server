@@ -20,8 +20,9 @@ const submitClaim = async (req, res) => {
     }
 
     const newClaim = {
-      userId: new ObjectId(userId),
+      userId: userId, // Store as string (Firebase UID)
       policyId: new ObjectId(policyId),
+      applicationId: application._id, // Store the application ID
       reason,
       documents: documents || [],
       status: 'Pending',
@@ -43,8 +44,8 @@ const getAllClaims = async (req, res) => {
       {
         $lookup: {
           from: 'applications',
-          localField: 'policyId',
-          foreignField: 'policyId',
+          localField: 'applicationId',
+          foreignField: '_id',
           as: 'applicationInfo'
         }
       },
@@ -66,7 +67,7 @@ const getAllClaims = async (req, res) => {
         $lookup: {
           from: 'users',
           localField: 'userId',
-          foreignField: '_id',
+          foreignField: 'firebaseUid',
           as: 'userInfo'
         }
       },
@@ -81,7 +82,7 @@ const getAllClaims = async (req, res) => {
           status: 1,
           submittedAt: 1,
           policyName: '$policyDetails.title',
-          policyAmount: '$policyDetails.coverageRange.max', // Assuming max coverage is the amount
+          policyAmount: '$applicationInfo.quoteData.coverageAmount', // Get coverage from application
           applicantName: '$userInfo.name',
           applicantEmail: '$userInfo.email',
         }
@@ -105,7 +106,7 @@ const getUserClaims = async (req, res) => {
   try {
     const claims = await claimsCollection.aggregate([
       {
-        $match: { userId: new ObjectId(userId) }
+        $match: { userId: userId } // Match userId as string
       },
       {
         $lookup: {

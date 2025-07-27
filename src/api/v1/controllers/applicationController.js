@@ -212,12 +212,23 @@ const getAssignedApplications = async (req, res) => {
 
 const getUserApplications = async (req, res) => {
   const applicationsCollection = client.db('assuredLife').collection('applications');
-  const userId = req.user.uid; // Get user ID from authenticated user (Firebase UID)
+  const firebaseUid = req.user.uid; // Get Firebase UID from authenticated user
 
   try {
+    console.log('Backend: getUserApplications - Received Firebase UID:', firebaseUid);
+    // Attempt to convert to ObjectId if it's a valid ObjectId string, otherwise use as string
+    let userIdToMatch;
+    if (ObjectId.isValid(firebaseUid)) {
+      userIdToMatch = new ObjectId(firebaseUid);
+      console.log('Backend: getUserApplications - Converted Firebase UID to ObjectId:', userIdToMatch);
+    } else {
+      userIdToMatch = firebaseUid;
+      console.log('Backend: getUserApplications - Using Firebase UID as string:', userIdToMatch);
+    }
+
     const applications = await applicationsCollection.aggregate([
       {
-        $match: { userId: userId }
+        $match: { userId: userIdToMatch }
       },
       {
         $lookup: {
@@ -250,7 +261,7 @@ const getUserApplications = async (req, res) => {
         $sort: { submittedAt: -1 }
       }
     ]).toArray();
-    console.log('Backend: User applications fetched:', JSON.stringify(applications, null, 2));
+    console.log('Backend: getUserApplications - Applications after aggregation:', JSON.stringify(applications, null, 2));
     res.status(200).json(applications);
   } catch (error) {
     console.error('Error fetching user applications:', error);
