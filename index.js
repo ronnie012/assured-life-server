@@ -44,7 +44,7 @@ app.get('/', (req, res) => {
         <title>AssuredLife Server Status</title>
         <style>
             body {
-                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                font-family: 'Arial', Segoe UI, Tahoma, Geneva, Verdana, sans-serif;
                 margin: 0;
                 padding: 0;
                 background: linear-gradient(to bottom right, #1a202c, #2d3748); /* from-gray-900 to-gray-800 */
@@ -63,15 +63,15 @@ app.get('/', (req, res) => {
                 border: 1px solid #4a5568; /* border border-gray-600 */
             }
             h1 {
-                font-size: 3rem; /* text-5xl */
+                font-size: 3.5rem; /* text-5xl */
                 font-weight: 800; /* font-extrabold */
                 margin-bottom: 1rem; /* mb-4 */
                 color: #68d391; /* text-green-400 */
             }
             p {
-                font-size: 1.25rem; /* text-xl */
+                font-size: 1.35rem; /* text-xl */
                 margin-bottom: 1.5rem; /* mb-6 */
-                color: #a0aec0; /* text-gray-300 */
+                color: orange; /* text-gray-300 */
             }
             .status-indicator-wrapper {
                 display: flex;
@@ -110,8 +110,13 @@ app.get('/', (req, res) => {
                 font-weight: 600; /* font-semibold */
                 color: #9ae6b4; /* text-green-300 */
             }
+            .status {
+                font-size: 1.5rem; /* text-2xl */
+                font-weight: 600; /* font-semibold */
+                color: #1E88E5;
+            }
             .api-requests-text {
-                font-size: 1rem; /* text-md */
+                font-size: 1.25rem; /* text-md */
                 color: #cbd5e0; /* text-gray-400 */
             }
 
@@ -129,16 +134,17 @@ app.get('/', (req, res) => {
     </head>
     <body>
         <div class="container">
-            <h1>AssuredLife Server</h1>
-            <p>Reliable backend is up and running!</p>
+            <h1>Welcome to AssuredLife Server API!</h1>
+            <p>Powering AssuredLife platform to manage policies, clearance, & user database on MongoDB!</p>
             <div class="status-indicator-wrapper">
                 <span class="status-dot-outer">
                     <span class="status-dot-ping"></span>
                     <span class="status-dot-inner"></span>
                 </span>
-                <span class="status-text">Status: Online</span>
+                <span class="status-text">Server Status: </span> &nbsp; <span class="status"> Online & Connected to MongoDB Database.</span>
             </div>
             <p class="api-requests-text">Serving API requests for AssuredLife web app.</p>
+            <p class="api-requests-text">API Version: 1.0.</p>
         </div>
     </body>
     </html>
