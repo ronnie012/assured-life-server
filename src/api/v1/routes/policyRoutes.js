@@ -4,7 +4,7 @@ const firebaseAuthMiddleware = require('../../../middlewares/firebaseAuthMiddlew
 const checkRole = require('../../../middlewares/roleCheckMiddleware');
 
 const router = express.Router();
-console.log('policyRoutes: Router initialized.');
+// console.log('policyRoutes: Router initialized.');
 
 router.get('/popular', getPopularPolicies);
 router.get('/', getAllPolicies);
