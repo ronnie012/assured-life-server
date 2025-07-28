@@ -30,6 +30,13 @@ const submitClaim = async (req, res) => {
     };
 
     await claimsCollection.insertOne(newClaim);
+
+    // Update the claimStatus in the corresponding application to 'Pending'
+    await applicationsCollection.updateOne(
+      { _id: application._id },
+      { $set: { claimStatus: 'Pending' } }
+    );
+
     res.status(201).json({ message: 'Claim submitted successfully!' });
   } catch (error) {
     console.error('Error submitting claim:', error);
@@ -144,6 +151,7 @@ const getUserClaims = async (req, res) => {
 
 const updateClaimStatus = async (req, res) => {
   const claimsCollection = client.db('assuredLife').collection('claims');
+  const applicationsCollection = client.db('assuredLife').collection('applications');
   const { id } = req.params;
   const { status } = req.body;
 
@@ -156,6 +164,18 @@ const updateClaimStatus = async (req, res) => {
     if (result.matchedCount === 0) {
       return res.status(404).json({ message: 'Claim not found.' });
     }
+
+    // Find the claim to get its applicationId
+    const updatedClaim = await claimsCollection.findOne({ _id: new ObjectId(id) });
+
+    if (updatedClaim && updatedClaim.applicationId) {
+      // Update the claimStatus in the corresponding application
+      await applicationsCollection.updateOne(
+        { _id: updatedClaim.applicationId },
+        { $set: { claimStatus: status } }
+      );
+    }
+
     res.status(200).json({ message: 'Claim status updated successfully.' });
   } catch (error) {
     console.error('Error updating claim status:', error);

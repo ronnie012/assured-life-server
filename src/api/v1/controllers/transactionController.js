@@ -6,16 +6,10 @@ const getAllTransactions = async (req, res) => {
   try {
     const transactions = await transactionsCollection.aggregate([
       {
-        $addFields: {
-          userIdObjectId: { $toObjectId: "$userId" },
-          policyIdObjectId: { $toObjectId: "$policyId" }
-        }
-      },
-      {
         $lookup: {
           from: 'users',
-          localField: 'userIdObjectId',
-          foreignField: '_id',
+          localField: 'userId',
+          foreignField: 'firebaseUid',
           as: 'userInfo'
         }
       },
@@ -25,7 +19,7 @@ const getAllTransactions = async (req, res) => {
       {
         $lookup: {
           from: 'policies',
-          localField: 'policyIdObjectId',
+          localField: 'policyId',
           foreignField: '_id',
           as: 'policyInfo'
         }

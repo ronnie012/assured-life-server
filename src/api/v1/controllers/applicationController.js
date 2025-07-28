@@ -15,6 +15,7 @@ const submitApplication = async (req, res) => {
       quoteData, // Add this line
       status: 'Pending', // Ensure status is Pending on submission
       paymentStatus: 'Due', // Initialize payment status as 'Due'
+      claimStatus: 'No Claim', // Initialize claim status
       submittedAt: new Date(),
     };
 
