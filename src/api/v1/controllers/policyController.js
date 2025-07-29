@@ -19,7 +19,8 @@ const getAllPolicies = async (req, res) => {
   console.log('Server: Attempting to fetch all policies.');
   try {
     const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 6; // 6 policies per page as per requirement
+    // If limit is explicitly set to '0', we fetch all. Otherwise, we paginate with a default of 9.
+    const limit = req.query.limit === '0' ? 0 : parseInt(req.query.limit) || 9;
     const category = req.query.category;
     const search = req.query.search;
 
@@ -31,9 +32,18 @@ const getAllPolicies = async (req, res) => {
       query.title = { $regex: search, $options: 'i' }; // Case-insensitive search
     }
 
-    const skip = (page - 1) * limit;
-    const policies = await policiesCollection.find(query).skip(skip).limit(limit).toArray();
     const totalPolicies = await policiesCollection.countDocuments(query);
+    let policiesCursor = policiesCollection.find(query);
+    let totalPages = 1;
+
+    // Apply pagination only if a limit is set and greater than 0
+    if (limit > 0) {
+      const skip = (page - 1) * limit;
+      policiesCursor = policiesCursor.skip(skip).limit(limit);
+      totalPages = Math.ceil(totalPolicies / limit);
+    }
+
+    const policies = await policiesCursor.toArray();
 
     console.log('Server: Fetched policies. Count:', policies.length);
     console.log('Server: Total policies:', totalPolicies);
@@ -43,7 +53,7 @@ const getAllPolicies = async (req, res) => {
       policies,
       totalPolicies,
       currentPage: page,
-      totalPages: Math.ceil(totalPolicies / limit),
+      totalPages: totalPages,
     });
   } catch (error) {
     console.error('Server Error: Error fetching all policies:', error);

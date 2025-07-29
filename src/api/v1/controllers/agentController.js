@@ -155,28 +155,23 @@ const approveAgentApplication = async (req, res) => {
       return res.status(404).json({ message: 'User not found for this agent application.' });
     }
 
-    // Now, update or create the main agent entry in agentsCollection using userId
-    await agentsCollection.updateOne(
-      { userId: new ObjectId(userId) }, // Use userId to identify the agent profile
-      {
-        $set: {
-          status: 'approved',
-          userName: agentApplication.userName, // Use userName from application
-          userEmail: agentApplication.userEmail, // Use userEmail from application
-          experience: agentApplication.experience,
-          specialties: agentApplication.specialties,
-          updatedAt: new Date(),
-        },
-        $setOnInsert: {
-          createdAt: new Date(),
-          userId: new ObjectId(userId), // Ensure userId is set on insert
-        },
-      },
-      { upsert: true } // Create if not exists
-    );
+    // Create a new approved agent entry in agentsCollection
+    const newApprovedAgent = {
+      userId: new ObjectId(userId), // Link to the user document
+      userName: agentApplication.userName,
+      userEmail: agentApplication.userEmail,
+      experience: agentApplication.experience,
+      specialties: agentApplication.specialties,
+      status: 'approved',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
 
-    // Optionally, delete the original pending application document if it's no longer needed
-        await agentsCollection.deleteOne({ _id: new ObjectId(id) });
+    const insertResult = await agentsCollection.insertOne(newApprovedAgent);
+    console.log('Server: insertResult for new approved agent:', insertResult);
+
+    // Delete the original pending application document
+    await agentsCollection.deleteOne({ _id: new ObjectId(id) });
 
     res.status(200).json({ message: 'Agent application approved and user role updated.' });
   } catch (error) {
@@ -244,7 +239,7 @@ const getAllApprovedAgents = async (req, res) => {
       }
     ]).toArray();
     console.log('Server: Fetched approved agents. Count:', approvedAgents.length);
-    // console.log('Server: Approved agents data (full):', JSON.stringify(approvedAgents, null, 2));
+    console.log('Server: Approved agents data (full):', JSON.stringify(approvedAgents, null, 2));
     res.status(200).json(approvedAgents);
   } catch (error) {
     console.error('Server Error: Error fetching approved agents:', error);
