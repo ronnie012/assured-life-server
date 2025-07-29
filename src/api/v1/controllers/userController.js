@@ -105,9 +105,9 @@ const updateUserRole = async (req, res) => {
 
 const upsertFirebaseUser = async (req, res) => {
   const usersCollection = client.db('assuredLife').collection('users');
-  const { uid, email, displayName, photoURL } = req.body;
+  const { uid, email, name, photoURL } = req.body;
 
-  const DEFAULT_AVATAR_URL = `https://www.gravatar.com/avatar/?d=mp`; // Generic Mystery Person avatar
+  const DEFAULT_AVATAR_URL = `https://www.gravatar.com/avatar/?d=mp`;
 
   try {
     const filter = { firebaseUid: uid };
@@ -122,31 +122,27 @@ const upsertFirebaseUser = async (req, res) => {
       },
     };
 
-    if (displayName) {
-      updateDoc.$set.name = displayName;
+    // Conditionally add name to $set or $setOnInsert
+    if (name !== undefined && name !== null) {
+      updateDoc.$set.name = name;
     } else {
-      updateDoc.$set.name = email.split('@')[0]; // Always set name to email's local part if displayName not provided
+      updateDoc.$setOnInsert.name = email.split('@')[0]; // Default name for new users if not provided
     }
 
-    // Handle photoURL
-    if (photoURL !== undefined) { // If photoURL is explicitly provided in the request body
-      updateDoc.$set.photoURL = photoURL; // Use it, even if it's an empty string (to clear it)
-    } else { // If photoURL is NOT provided in the request body
-      // This means we should not change the existing photoURL for existing users.
-      // For new users, we need to set a default.
-      updateDoc.$setOnInsert.photoURL = DEFAULT_AVATAR_URL;
+    // Conditionally add photoURL to $set or $setOnInsert
+    if (photoURL !== undefined) {
+      updateDoc.$set.photoURL = photoURL;
+    } else {
+      updateDoc.$setOnInsert.photoURL = DEFAULT_AVATAR_URL; // Default photo for new users if not provided
     }
 
-    const options = { upsert: true, returnDocument: 'after' }; // Create if not exists, return the updated/inserted document
+    const options = { upsert: true, returnDocument: 'after' };
 
     const result = await usersCollection.findOneAndUpdate(filter, updateDoc, options);
-
-    // console.log('MongoDB findOneAndUpdate result:', result);
 
     if (result) {
       res.status(200).json(result);
     } else {
-      // This case should ideally not be hit with upsert:true, but as a fallback
       res.status(500).json({ message: 'Failed to upsert user data. Result value is null.' });
     }
   } catch (error) {
