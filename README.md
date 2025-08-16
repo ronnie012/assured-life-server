@@ -1,4 +1,4 @@
-# AssuredLife - Life Insurance Management Platform - Server Side
+# assuredLifeDbUpgraded - Life Insurance Management Platform - Server Side
 
 This is the backend server for the Life Insurance Management Platform, a modern, role-based web application built with the MERN stack. It provides a secure and robust REST API to support the client-side application.
 
