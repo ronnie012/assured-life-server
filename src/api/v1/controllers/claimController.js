@@ -2,8 +2,8 @@ const { ObjectId } = require('mongodb');
 const { client } = require('../../../config/db');
 
 const submitClaim = async (req, res) => {
-  const claimsCollection = client.db('assuredLife').collection('claims');
-  const applicationsCollection = client.db('assuredLife').collection('applications');
+  const claimsCollection = client.db('assuredLifeDbUpgraded').collection('claims');
+  const applicationsCollection = client.db('assuredLifeDbUpgraded').collection('applications');
   const { policyId, reason, documents } = req.body;
   const userId = req.user.uid; // From authenticated user (Firebase UID)
 
@@ -45,7 +45,7 @@ const submitClaim = async (req, res) => {
 };
 
 const getAllClaims = async (req, res) => {
-  const claimsCollection = client.db('assuredLife').collection('claims');
+  const claimsCollection = client.db('assuredLifeDbUpgraded').collection('claims');
   try {
     const claims = await claimsCollection.aggregate([
       {
@@ -107,7 +107,7 @@ const getAllClaims = async (req, res) => {
 };
 
 const getUserClaims = async (req, res) => {
-  const claimsCollection = client.db('assuredLife').collection('claims');
+  const claimsCollection = client.db('assuredLifeDbUpgraded').collection('claims');
   const userId = req.user.uid; // Get user ID from authenticated user (Firebase UID)
 
   try {
@@ -150,8 +150,8 @@ const getUserClaims = async (req, res) => {
 };
 
 const updateClaimStatus = async (req, res) => {
-  const claimsCollection = client.db('assuredLife').collection('claims');
-  const applicationsCollection = client.db('assuredLife').collection('applications');
+  const claimsCollection = client.db('assuredLifeDbUpgraded').collection('claims');
+  const applicationsCollection = client.db('assuredLifeDbUpgraded').collection('applications');
   const { id } = req.params;
   const { status } = req.body;
 

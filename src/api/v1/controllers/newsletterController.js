@@ -1,7 +1,7 @@
 const { client } = require('../../../config/db');
 
 const subscribeToNewsletter = async (req, res) => {
-  const newsletterSubscribersCollection = client.db('assuredLife').collection('newsletterSubscribers');
+  const newsletterSubscribersCollection = client.db('assuredLifeDbUpgraded').collection('newsletterSubscribers');
   const { name, email } = req.body;
 
   try {

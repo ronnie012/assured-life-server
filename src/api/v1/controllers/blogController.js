@@ -2,7 +2,7 @@ const { ObjectId } = require('mongodb');
 const { client } = require('../../../config/db');
 
 const getAllBlogs = async (req, res) => {
-  const blogsCollection = client.db('assuredLife').collection('blogs');
+  const blogsCollection = client.db('assuredLifeDbUpgraded').collection('blogs');
   const page = parseInt(req.query.page) || 1;
   const limit = parseInt(req.query.limit) || 9;
   const skip = (page - 1) * limit;
@@ -26,7 +26,7 @@ const getAllBlogs = async (req, res) => {
 };
 
 const getBlogById = async (req, res) => {
-  const blogsCollection = client.db('assuredLife').collection('blogs');
+  const blogsCollection = client.db('assuredLifeDbUpgraded').collection('blogs');
   const { id } = req.params;
   try {
     const blog = await blogsCollection.findOneAndUpdate(
@@ -46,7 +46,7 @@ const getBlogById = async (req, res) => {
 };
 
 const getLatestBlogs = async (req, res) => {
-  const blogsCollection = client.db('assuredLife').collection('blogs');
+  const blogsCollection = client.db('assuredLifeDbUpgraded').collection('blogs');
   try {
     const blogs = await blogsCollection.find({}).sort({ publishDate: -1 }).limit(4).toArray();
     res.status(200).json(blogs);
@@ -57,8 +57,8 @@ const getLatestBlogs = async (req, res) => {
 };
 
 const createBlog = async (req, res) => {
-  const blogsCollection = client.db('assuredLife').collection('blogs');
-  const usersCollection = client.db('assuredLife').collection('users');
+  const blogsCollection = client.db('assuredLifeDbUpgraded').collection('blogs');
+  const usersCollection = client.db('assuredLifeDbUpgraded').collection('users');
   const { title, content, blogImage } = req.body;
   const authorId = req.user.uid;
   let authorName = req.user.displayName || req.user.name;
@@ -91,7 +91,7 @@ const createBlog = async (req, res) => {
 };
 
 const getAgentBlogs = async (req, res) => {
-  const blogsCollection = client.db('assuredLife').collection('blogs');
+  const blogsCollection = client.db('assuredLifeDbUpgraded').collection('blogs');
   const { uid, role } = req.user;
   
   try {
@@ -109,7 +109,7 @@ const getAgentBlogs = async (req, res) => {
 };
 
 const updateBlog = async (req, res) => {
-  const blogsCollection = client.db('assuredLife').collection('blogs');
+  const blogsCollection = client.db('assuredLifeDbUpgraded').collection('blogs');
   const { id } = req.params;
   const { title, content, blogImage } = req.body;
   const { uid, role } = req.user;
@@ -138,7 +138,7 @@ const updateBlog = async (req, res) => {
 };
 
 const deleteBlog = async (req, res) => {
-  const blogsCollection = client.db('assuredLife').collection('blogs');
+  const blogsCollection = client.db('assuredLifeDbUpgraded').collection('blogs');
   const { id } = req.params;
   const { uid, role } = req.user;
 

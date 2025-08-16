@@ -3,7 +3,7 @@ const { ObjectId } = require('mongodb');
 const { client } = require('../../../config/db');
 
 const getAllAgents = async (req, res) => {
-  const agentsCollection = client.db('assuredLife').collection('agents');
+  const agentsCollection = client.db('assuredLifeDbUpgraded').collection('agents');
   try {
     const agents = await agentsCollection.aggregate([
       {
@@ -43,7 +43,7 @@ const getAllAgents = async (req, res) => {
 };
 
 const getFeaturedAgents = async (req, res) => {
-  const agentsCollection = client.db('assuredLife').collection('agents');
+  const agentsCollection = client.db('assuredLifeDbUpgraded').collection('agents');
   try {
     const featuredAgents = await agentsCollection.aggregate([
       {
@@ -86,7 +86,7 @@ const getFeaturedAgents = async (req, res) => {
 };
 
 const getAgentApplications = async (req, res) => {
-  const agentsCollection = client.db('assuredLife').collection('agents');
+  const agentsCollection = client.db('assuredLifeDbUpgraded').collection('agents');
   console.log('Server: Attempting to fetch pending agent applications.');
   try {
     const pendingAgents = await agentsCollection.aggregate([
@@ -132,8 +132,8 @@ const getAgentApplications = async (req, res) => {
 };
 
 const approveAgentApplication = async (req, res) => {
-  const agentsCollection = client.db('assuredLife').collection('agents');
-  const usersCollection = client.db('assuredLife').collection('users');
+  const agentsCollection = client.db('assuredLifeDbUpgraded').collection('agents');
+  const usersCollection = client.db('assuredLifeDbUpgraded').collection('users');
   const { id } = req.params; // This is the _id of the agent application document
   const { userId } = req.body; // This is the userId associated with the application
 
@@ -181,7 +181,7 @@ const approveAgentApplication = async (req, res) => {
 };
 
 const rejectAgentApplication = async (req, res) => {
-  const agentsCollection = client.db('assuredLife').collection('agents');
+  const agentsCollection = client.db('assuredLifeDbUpgraded').collection('agents');
   const { id } = req.params; // Agent application ID
   const { feedback } = req.body; // Optional feedback for rejection
 
@@ -202,7 +202,7 @@ const rejectAgentApplication = async (req, res) => {
 };
 
 const getAllApprovedAgents = async (req, res) => {
-  const agentsCollection = client.db('assuredLife').collection('agents');
+  const agentsCollection = client.db('assuredLifeDbUpgraded').collection('agents');
   console.log('Server: Attempting to fetch all approved agents.');
   try {
     const approvedAgents = await agentsCollection.aggregate([
@@ -248,7 +248,7 @@ const getAllApprovedAgents = async (req, res) => {
 };
 
 const submitAgentApplication = async (req, res) => {
-  const agentsCollection = client.db('assuredLife').collection('agents');
+  const agentsCollection = client.db('assuredLifeDbUpgraded').collection('agents');
   try {
     const { userId, userName, userEmail, experience, specialties, motivation } = req.body;
 

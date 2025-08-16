@@ -2,7 +2,7 @@ const { ObjectId } = require('mongodb');
 const { client } = require('../../../config/db');
 
 const getUserProfile = async (req, res) => {
-  const usersCollection = client.db('assuredLife').collection('users');
+  const usersCollection = client.db('assuredLifeDbUpgraded').collection('users');
   const userId = req.user.uid; // Get user ID from authenticated user (Firebase UID)
   console.log('Backend: Fetching profile for Firebase UID:', userId);
 
@@ -20,7 +20,7 @@ const getUserProfile = async (req, res) => {
 };
 
 const updateProfile = async (req, res) => {
-  const usersCollection = client.db('assuredLife').collection('users');
+  const usersCollection = client.db('assuredLifeDbUpgraded').collection('users');
   const userId = req.user.uid;
   const { name, photoURL } = req.body;
 

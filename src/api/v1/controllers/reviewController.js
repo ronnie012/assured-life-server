@@ -2,7 +2,7 @@ const { ObjectId } = require('mongodb');
 const { client } = require('../../../config/db');
 
 const getCustomerReviews = async (req, res) => {
-  const reviewsCollection = client.db('assuredLife').collection('reviews');
+  const reviewsCollection = client.db('assuredLifeDbUpgraded').collection('reviews');
   console.log('Server: Attempting to fetch customer reviews.');
   try {
     const reviews = await reviewsCollection.find({}).sort({ createdAt: -1 }).limit(5).toArray();
@@ -15,7 +15,7 @@ const getCustomerReviews = async (req, res) => {
 };
 
 const createReview = async (req, res) => {
-  const reviewsCollection = client.db('assuredLife').collection('reviews');
+  const reviewsCollection = client.db('assuredLifeDbUpgraded').collection('reviews');
   const { rating, message, policyId, agentId } = req.body;
   const userId = req.user.uid; // Get user ID from authenticated user (Firebase UID)
   const userName = req.user.name || req.user.email; // Get user name from authenticated user

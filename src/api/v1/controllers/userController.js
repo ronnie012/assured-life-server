@@ -2,7 +2,7 @@ const { ObjectId } = require('mongodb');
 const { client } = require('../../../config/db');
 
 const getAllUsers = async (req, res) => {
-  const usersCollection = client.db('assuredLife').collection('users');
+  const usersCollection = client.db('assuredLifeDbUpgraded').collection('users');
   console.log('Server: Attempting to fetch all users.');
   console.log('Server: req.user in getAllUsers:', req.user); // Added logging for req.user
   try {
@@ -17,8 +17,8 @@ const getAllUsers = async (req, res) => {
 };
 
 const updateUserRole = async (req, res) => {
-  const usersCollection = client.db('assuredLife').collection('users');
-  const agentsCollection = client.db('assuredLife').collection('agents');
+  const usersCollection = client.db('assuredLifeDbUpgraded').collection('users');
+  const agentsCollection = client.db('assuredLifeDbUpgraded').collection('agents');
   const { id } = req.params;
   const { role } = req.body;
 
@@ -104,46 +104,58 @@ const updateUserRole = async (req, res) => {
 };
 
 const upsertFirebaseUser = async (req, res) => {
-  const usersCollection = client.db('assuredLife').collection('users');
+  const usersCollection = client.db('assuredLifeDbUpgraded').collection('users');
   const { uid, email, name, photoURL } = req.body;
-
-  const DEFAULT_AVATAR_URL = `https://www.gravatar.com/avatar/?d=mp`;
+  console.log('Server: upsertFirebaseUser - Request Body:', req.body);
 
   try {
     const filter = { firebaseUid: uid };
+    
+    // Start with the fields that are always updated
     const updateDoc = {
       $set: {
         email,
         lastLogin: new Date(),
       },
       $setOnInsert: {
-        role: 'customer', // Default role for new users
+        firebaseUid: uid,
+        role: 'customer',
         createdAt: new Date(),
       },
     };
 
-    // Conditionally add name to $set or $setOnInsert
-    if (name !== undefined && name !== null) {
+    // Only add name to the document if it's provided.
+    // For new users, it will be set on insert. For existing users, it will be updated.
+    if (name) {
       updateDoc.$set.name = name;
     } else {
-      updateDoc.$setOnInsert.name = email.split('@')[0]; // Default name for new users if not provided
+      // If a new user is created without a name (e.g. from some old client), default it.
+      updateDoc.$setOnInsert.name = email.split('@')[0];
     }
 
-    // Conditionally add photoURL to $set or $setOnInsert
-    if (photoURL !== undefined) {
+    // Only add photoURL to the document if it's provided.
+    if (photoURL) {
       updateDoc.$set.photoURL = photoURL;
-    } else {
-      updateDoc.$setOnInsert.photoURL = DEFAULT_AVATAR_URL; // Default photo for new users if not provided
     }
 
     const options = { upsert: true, returnDocument: 'after' };
-
     const result = await usersCollection.findOneAndUpdate(filter, updateDoc, options);
 
-    if (result) {
-      res.status(200).json(result);
+    console.log('Server: findOneAndUpdate result:', result);
+    if (result && result.value) {
+      console.log('Server: upsertFirebaseUser - Result Value:', result.value);
+      res.status(200).json(result.value);
     } else {
-      res.status(500).json({ message: 'Failed to upsert user data. Result value is null.' });
+      // If findOneAndUpdate returns null or result.value is null/undefined, but upserted, we might need to query again
+      // However, with returnDocument: 'after', it should return the new doc.
+      // This case handles unexpected null returns or cases where value is not directly available.
+      const newUser = await usersCollection.findOne(filter);
+      if(newUser) {
+        console.log('Server: upsertFirebaseUser - New User (after re-query):', newUser);
+        res.status(200).json(newUser);
+      } else {
+        res.status(500).json({ message: 'Failed to upsert user data and could not retrieve the user.' });
+      }
     }
   } catch (error) {
     console.error('Error upserting Firebase user:', error);
@@ -152,7 +164,7 @@ const upsertFirebaseUser = async (req, res) => {
 };
 
 const deleteUser = async (req, res) => {
-  const usersCollection = client.db('assuredLife').collection('users');
+  const usersCollection = client.db('assuredLifeDbUpgraded').collection('users');
   const { id } = req.params;
 
   try {

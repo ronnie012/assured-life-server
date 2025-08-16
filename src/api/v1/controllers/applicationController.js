@@ -2,7 +2,7 @@ const { ObjectId } = require('mongodb');
 const { client } = require('../../../config/db');
 
 const submitApplication = async (req, res) => {
-  const applicationsCollection = client.db('assuredLife').collection('applications');
+  const applicationsCollection = client.db('assuredLifeDbUpgraded').collection('applications');
   const { userId, policyId, personalData, nomineeData, healthDisclosure, quoteData } = req.body;
 
   try {
@@ -30,7 +30,7 @@ const submitApplication = async (req, res) => {
 };
 
 const getAllApplications = async (req, res) => {
-  const applicationsCollection = client.db('assuredLife').collection('applications');
+  const applicationsCollection = client.db('assuredLifeDbUpgraded').collection('applications');
   console.log('Backend: getAllApplications - Function entered.');
   try {
     const applications = await applicationsCollection.aggregate([
@@ -84,8 +84,8 @@ const getAllApplications = async (req, res) => {
 };
 
 const updateApplicationStatus = async (req, res) => {
-  const applicationsCollection = client.db('assuredLife').collection('applications');
-  const policiesCollection = client.db('assuredLife').collection('policies');
+  const applicationsCollection = client.db('assuredLifeDbUpgraded').collection('applications');
+  const policiesCollection = client.db('assuredLifeDbUpgraded').collection('policies');
   const { id } = req.params;
   const { status, feedback, policyId } = req.body;
 
@@ -117,8 +117,8 @@ const updateApplicationStatus = async (req, res) => {
 };
 
 const assignAgentToApplication = async (req, res) => {
-  const applicationsCollection = client.db('assuredLife').collection('applications');
-  const usersCollection = client.db('assuredLife').collection('users');
+  const applicationsCollection = client.db('assuredLifeDbUpgraded').collection('applications');
+  const usersCollection = client.db('assuredLifeDbUpgraded').collection('users');
   const { id } = req.params;
   const { agentId } = req.body;
 
@@ -148,7 +148,7 @@ const assignAgentToApplication = async (req, res) => {
 };
 
 const getAssignedApplications = async (req, res) => {
-  const applicationsCollection = client.db('assuredLife').collection('applications');
+  const applicationsCollection = client.db('assuredLifeDbUpgraded').collection('applications');
   const agentId = req.user.userId; // Get agent's MongoDB _id from authenticated user
   console.log('Backend: getAssignedApplications - agentId from req.user.userId:', agentId, 'Type:', typeof agentId);
 
@@ -212,7 +212,7 @@ const getAssignedApplications = async (req, res) => {
 };
 
 const getUserApplications = async (req, res) => {
-  const applicationsCollection = client.db('assuredLife').collection('applications');
+  const applicationsCollection = client.db('assuredLifeDbUpgraded').collection('applications');
   const firebaseUid = req.user.uid; // Get Firebase UID from authenticated user
 
   try {
@@ -271,7 +271,7 @@ const getUserApplications = async (req, res) => {
 };
 
 const getApplicationById = async (req, res) => {
-  const applicationsCollection = client.db('assuredLife').collection('applications');
+  const applicationsCollection = client.db('assuredLifeDbUpgraded').collection('applications');
   const { id } = req.params;
   const userId = req.user.uid; // From authenticated user (Firebase UID)
 

@@ -2,7 +2,7 @@ const { ObjectId } = require('mongodb');
 const { client } = require('../../../config/db');
 
 const getPopularPolicies = async (req, res) => {
-  const policiesCollection = client.db('assuredLife').collection('policies');
+  const policiesCollection = client.db('assuredLifeDbUpgraded').collection('policies');
   console.log('Server: Attempting to fetch popular policies.');
   try {
     const popularPolicies = await policiesCollection.find({}).sort({ purchaseCount: -1 }).limit(6).toArray();
@@ -15,7 +15,7 @@ const getPopularPolicies = async (req, res) => {
 };
 
 const getAllPolicies = async (req, res) => {
-  const policiesCollection = client.db('assuredLife').collection('policies');
+  const policiesCollection = client.db('assuredLifeDbUpgraded').collection('policies');
   console.log('Server: Attempting to fetch all policies.');
   try {
     const page = parseInt(req.query.page) || 1;
@@ -62,7 +62,7 @@ const getAllPolicies = async (req, res) => {
 };
 
 const getPolicyById = async (req, res) => {
-  const policiesCollection = client.db('assuredLife').collection('policies');
+  const policiesCollection = client.db('assuredLifeDbUpgraded').collection('policies');
   console.log('Server: getPolicyById function entered. ID:', req.params.id);
   try {
     const policy = await policiesCollection.findOne({ _id: new ObjectId(req.params.id) });
@@ -77,7 +77,7 @@ const getPolicyById = async (req, res) => {
 };
 
 const createPolicy = async (req, res) => {
-  const policiesCollection = client.db('assuredLife').collection('policies');
+  const policiesCollection = client.db('assuredLifeDbUpgraded').collection('policies');
   const { title, category, description, minAge, maxAge, coverageRange, durationOptions, basePremiumRate, policyImage } = req.body;
 
   try {
@@ -104,7 +104,7 @@ const createPolicy = async (req, res) => {
 };
 
 const updatePolicy = async (req, res) => {
-  const policiesCollection = client.db('assuredLife').collection('policies');
+  const policiesCollection = client.db('assuredLifeDbUpgraded').collection('policies');
   const { id } = req.params;
   const { title, category, description, minAge, maxAge, coverageRange, durationOptions, basePremiumRate, policyImage } = req.body;
 
@@ -138,7 +138,7 @@ const updatePolicy = async (req, res) => {
 };
 
 const deletePolicy = async (req, res) => {
-  const policiesCollection = client.db('assuredLife').collection('policies');
+  const policiesCollection = client.db('assuredLifeDbUpgraded').collection('policies');
   const { id } = req.params;
 
   try {
@@ -155,8 +155,8 @@ const deletePolicy = async (req, res) => {
 };
 
 const getAppliedPoliciesForUser = async (req, res) => {
-  const applicationsCollection = client.db('assuredLife').collection('applications');
-  const usersCollection = client.db('assuredLife').collection('users');
+  const applicationsCollection = client.db('assuredLifeDbUpgraded').collection('applications');
+  const usersCollection = client.db('assuredLifeDbUpgraded').collection('users');
   const userId = req.user.uid; // Get user ID from authenticated user (Firebase UID)
   console.log('Fetching applied policies for Firebase UID:', userId);
 

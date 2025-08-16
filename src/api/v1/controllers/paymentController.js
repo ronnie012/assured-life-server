@@ -5,8 +5,8 @@ const { client } = require('../../../config/db');
 const createPaymentIntent = async (req, res) => {
   console.log('createPaymentIntent - Request Body:', req.body);
   console.log('createPaymentIntent - Authenticated User ID:', req.user.uid);
-  const applicationsCollection = client.db('assuredLife').collection('applications');
-  const policiesCollection = client.db('assuredLife').collection('policies');
+  const applicationsCollection = client.db('assuredLifeDbUpgraded').collection('applications');
+  const policiesCollection = client.db('assuredLifeDbUpgraded').collection('policies');
   const { amount, policyId, applicationId } = req.body; // amount in cents
   const userId = req.user.uid; // From authenticated user (Firebase UID)
 
@@ -38,9 +38,9 @@ const createPaymentIntent = async (req, res) => {
 };
 
 const savePaymentInfo = async (req, res) => {
-  const applicationsCollection = client.db('assuredLife').collection('applications');
-  const policiesCollection = client.db('assuredLife').collection('policies');
-  const transactionsCollection = client.db('assuredLife').collection('transactions');
+  const applicationsCollection = client.db('assuredLifeDbUpgraded').collection('applications');
+  const policiesCollection = client.db('assuredLifeDbUpgraded').collection('policies');
+  const transactionsCollection = client.db('assuredLifeDbUpgraded').collection('transactions');
   const { transactionId, amount, currency, status, paymentMethod, applicationId } = req.body; // Removed policyId from destructuring
   console.log('Backend: savePaymentInfo - received applicationId:', applicationId);
   const userId = req.user.uid;

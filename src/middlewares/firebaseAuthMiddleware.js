@@ -1,7 +1,7 @@
 const admin = require('../config/firebaseAdmin');
 const { client } = require('../config/db'); // Import MongoDB client
 
-const usersCollection = client.db('assuredLife').collection('users'); // Access users collection
+const usersCollection = client.db('assuredLifeDbUpgraded').collection('users'); // Access users collection
 
 const firebaseAuthMiddleware = async (req, res, next) => {
   const idToken = req.headers.authorization?.split('Bearer ')[1];
