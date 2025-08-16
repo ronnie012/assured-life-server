@@ -1,7 +1,7 @@
 node_modules
 .env
 
-/src/config/assured-life-firebase-adminsdk-fbsvc-864a1619d5.json
+/src/config/assured-life-upgraded-firebase-adminsdk-fbsvc-f9aaaa291d.json
 
 # Local settings
 console.terminal.output.md
