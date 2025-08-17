@@ -2,7 +2,7 @@
 
 This is the backend server for the Life Insurance Management Platform, a modern, role-based web application built with the MERN stack. It provides a secure and robust REST API to support the client-side application.
 
-## Admin Credentials (for Testing)
+<!-- ## Admin Credentials (for Testing) -->
 
 <!-- For development and testing purposes, you can use the following administrator credentials to access protected admin routes:
 
