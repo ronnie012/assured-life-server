@@ -217,19 +217,10 @@ const getUserApplications = async (req, res) => {
 
   try {
     console.log('Backend: getUserApplications - Received Firebase UID:', firebaseUid);
-    // Attempt to convert to ObjectId if it's a valid ObjectId string, otherwise use as string
-    let userIdToMatch;
-    if (ObjectId.isValid(firebaseUid)) {
-      userIdToMatch = new ObjectId(firebaseUid);
-      console.log('Backend: getUserApplications - Converted Firebase UID to ObjectId:', userIdToMatch);
-    } else {
-      userIdToMatch = firebaseUid;
-      console.log('Backend: getUserApplications - Using Firebase UID as string:', userIdToMatch);
-    }
-
+    
     const applications = await applicationsCollection.aggregate([
       {
-        $match: { userId: userIdToMatch }
+        $match: { userId: firebaseUid }
       },
       {
         $lookup: {
