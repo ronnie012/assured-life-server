@@ -4,16 +4,20 @@ This is the backend server for the Life Insurance Management Platform, a modern,
 
 ## Admin Credentials (for Testing)
 
-For development and testing purposes, you can use the following administrator credentials to access protected admin routes:
+<!-- For development and testing purposes, you can use the following administrator credentials to access protected admin routes:
 
--   **Email:** `admin@lifesure.com`
--   **Password:** `adminpassword`
+-   **Email:** `m.sharful.i247@gmail.com`
+-   **Password:** `adminpassword` -->
 
 ## Live Site URL
 
-The frontend application is deployed and accessible at the following URL:
+The Front-End application is deployed and accessible at the following URL:
 
--   **Live Site:** [https://assured-life.web.app/](https://assured-life.web.app/)
+-   **Live Site:** [https://assured-life-upgraded.web.app/](https://assured-life-upgraded.web.app/)
+
+The Back-End server API is available at the following URL:
+
+-   **Backend API:** [https://assured-life-server-upgraded.vercel.app/](https://assured-life-server-upgraded.vercel.app/)
 
 ## Key Features (API Endpoints)
 
